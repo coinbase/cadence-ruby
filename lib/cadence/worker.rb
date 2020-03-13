@@ -3,6 +3,7 @@ require 'cadence/workflow/poller'
 require 'cadence/activity/poller'
 require 'cadence/execution_options'
 require 'cadence/executable_lookup'
+require 'cadence/middleware/middleware_stack'
 
 module Cadence
   class Worker
@@ -11,6 +12,7 @@ module Cadence
       @activities = Hash.new { |hash, key| hash[key] = ExecutableLookup.new }
       @pollers = []
       @shutting_down = false
+      @middleware_stack = MiddlewareStack.new
     end
 
     def register_workflow(workflow_class, options = {})
@@ -25,6 +27,10 @@ module Cadence
       key = [execution_options.domain, execution_options.task_list]
 
       @activities[key].add(execution_options.name, activity_class)
+    end
+
+    def use_middleware(middleware_class)
+      @middleware_stack.push(middleware_class)
     end
 
     def start
@@ -65,7 +71,7 @@ module Cadence
     end
 
     def activity_poller_for(domain, task_list, lookup)
-      Activity::Poller.new(domain, task_list, lookup.freeze)
+      Activity::Poller.new(domain, task_list, lookup.freeze, @middleware_stack.freeze)
     end
 
     def trap_signals

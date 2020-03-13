@@ -1,10 +1,13 @@
 require 'cadence/client'
 require 'cadence/activity/metadata'
 require 'cadence/activity/context'
+require 'cadence/concerns/processor'
 
 module Cadence
   class Activity
     class TaskProcessor
+      extend Cadence::Processor
+
       def initialize(task, activity_lookup)
         @task = task
         @task_token = task.taskToken
