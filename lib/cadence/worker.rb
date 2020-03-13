@@ -11,6 +11,7 @@ module Cadence
       @activities = Hash.new { |hash, key| hash[key] = ExecutableLookup.new }
       @pollers = []
       @shutting_down = false
+      @middlewares = []
     end
 
     def register_workflow(workflow_class, options = {})
@@ -25,6 +26,10 @@ module Cadence
       key = [execution_options.domain, execution_options.task_list]
 
       @activities[key].add(execution_options.name, activity_class)
+    end
+
+    def use_middleware(middleware_class)
+      @middlewares.push(middleware_class)
     end
 
     def start
@@ -54,18 +59,18 @@ module Cadence
 
     private
 
-    attr_reader :activities, :workflows, :pollers
+    attr_reader :activities, :workflows, :pollers, :middlewares
 
     def shutting_down?
       @shutting_down
     end
 
     def workflow_poller_for(domain, task_list, lookup)
-      Workflow::Poller.new(domain, task_list, lookup.freeze)
+      Workflow::Poller.new(domain, task_list, lookup.freeze, @middlewares.freeze)
     end
 
     def activity_poller_for(domain, task_list, lookup)
-      Activity::Poller.new(domain, task_list, lookup.freeze)
+      Activity::Poller.new(domain, task_list, lookup.freeze, @middlewares.freeze)
     end
 
     def trap_signals

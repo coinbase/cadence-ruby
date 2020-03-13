@@ -13,6 +13,12 @@ describe Cadence::Worker do
     task_list 'default-task-list'
   end
 
+  class TestMiddleware < Cadence::Middleware
+    def call(task, &next_middleware)
+      return next_middleware.call(task)
+    end
+  end
+
   THREAD_SYNC_DELAY = 0.01
 
   before do
@@ -72,6 +78,15 @@ describe Cadence::Worker do
     end
   end
 
+  describe '#use_middleware' do
+    let(:middlewares) { subject.send(:middlewares) }
+    it 'registers middleware and adds it to the middleware list' do
+      subject.use_middleware(TestMiddleware)
+
+      expect(middlewares).to include(TestMiddleware)
+    end
+  end
+
   describe '#start' do
     let(:workflow_poller_1) { instance_double(Cadence::Workflow::Poller, start: nil) }
     let(:workflow_poller_2) { instance_double(Cadence::Workflow::Poller, start: nil) }
@@ -83,22 +98,22 @@ describe Cadence::Worker do
 
       allow(Cadence::Workflow::Poller)
         .to receive(:new)
-        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup))
+        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [])
         .and_return(workflow_poller_1)
 
       allow(Cadence::Workflow::Poller)
         .to receive(:new)
-        .with('other-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup))
+        .with('other-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [])
         .and_return(workflow_poller_2)
 
       allow(Cadence::Activity::Poller)
         .to receive(:new)
-        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup))
+        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [])
         .and_return(activity_poller_1)
 
       allow(Cadence::Activity::Poller)
         .to receive(:new)
-        .with('default-domain', 'other-task-list', an_instance_of(Cadence::ExecutableLookup))
+        .with('default-domain', 'other-task-list', an_instance_of(Cadence::ExecutableLookup), [])
         .and_return(activity_poller_2)
 
       subject.register_workflow(TestWorkerWorkflow)

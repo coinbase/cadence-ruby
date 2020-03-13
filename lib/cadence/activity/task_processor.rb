@@ -5,6 +5,7 @@ require 'cadence/activity/context'
 module Cadence
   class Activity
     class TaskProcessor
+
       def initialize(task, activity_lookup)
         @task = task
         @task_token = task.taskToken

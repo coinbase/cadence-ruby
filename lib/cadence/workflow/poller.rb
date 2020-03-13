@@ -1,14 +1,16 @@
 require 'cadence/client'
 require 'cadence/workflow/decider'
+require 'cadence/middleware/chain'
 
 module Cadence
   class Workflow
     class Poller
-      def initialize(domain, task_list, workflow_lookup)
+      def initialize(domain, task_list, workflow_lookup, middlewares)
         @domain = domain
         @task_list = task_list
         @workflow_lookup = workflow_lookup
         @shutting_down = false
+        @middleware_chain = Middleware::Chain.new(middlewares)
       end
 
       def start
@@ -42,7 +44,7 @@ module Cadence
       end
 
       def poll_loop
-        while !shutting_down? do
+        until shutting_down? do
           Cadence.logger.debug("Polling for decision tasks (#{domain} / #{task_list})")
 
           task = poll_for_task
@@ -58,12 +60,14 @@ module Cadence
       end
 
       def process(task)
-        start_time = Time.now
+        @middleware_chain.invoke(task) do |task|
+          start_time = Time.now
 
-        decider.process(task)
+          decider.process(task)
 
-        time_diff = (Time.now - start_time) * 1000
-        Cadence.logger.info("Decision task processed in #{time_diff}ms")
+          time_diff = (Time.now - start_time) * 1000
+          Cadence.logger.info("Decision task processed in #{time_diff}ms")
+        end
       end
     end
   end

@@ -1,17 +1,19 @@
 require 'cadence/client'
 require 'cadence/thread_pool'
 require 'cadence/activity/task_processor'
+require 'cadence/middleware/chain'
 
 module Cadence
   class Activity
     class Poller
       THREAD_POOL_SIZE = 20
 
-      def initialize(domain, task_list, activity_lookup)
+      def initialize(domain, task_list, activity_lookup, middlewares)
         @domain = domain
         @task_list = task_list
         @activity_lookup = activity_lookup
         @shutting_down = false
+        @chain = Middleware::Chain.new(middlewares)
       end
 
       def start
@@ -63,7 +65,7 @@ module Cadence
       end
 
       def process(task)
-        TaskProcessor.new(task, activity_lookup).process
+        @chain.invoke(task) { |task| TaskProcessor.new(task, activity_lookup).process }
       end
 
       def thread_pool
