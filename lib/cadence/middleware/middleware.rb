@@ -1,15 +1,11 @@
-require 'cadence/concerns/processor'
-
 module Cadence
   class Middleware
-    extend Concerns::Processor
 
-    def initialize(app)
-      @next = nil
-      @prev = nil
+    def initialize(next)
+      @next = next
     end
 
-    def call(task, next_middleware)
+    def call(task)
       raise NotImplementedError, '#process method must be implemented by a subclass'
     end
 
