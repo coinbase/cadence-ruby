@@ -7,12 +7,12 @@ module Cadence
     class Poller
       THREAD_POOL_SIZE = 20
 
-      def initialize(domain, task_list, activity_lookup, middleware_stack)
+      def initialize(domain, task_list, activity_lookup, middleware)
         @domain = domain
         @task_list = task_list
         @activity_lookup = activity_lookup
         @shutting_down = false
-        @middleware_stack = middleware_stack
+        @middleware = middleware
       end
 
       def start
@@ -63,14 +63,21 @@ module Cadence
         nil
       end
 
+      def processor_stack
+        @processor_stack ||= build_processor_stack
+      end
+
+      def build_processor_stack
+        # Put the task processor on the bottom of the stack
+        stack = ->(task) { TaskProcessor.new(task, activity_lookup).process }
+        @middleware.each do |m|
+          stack = m.New(stack)
+        end
+        stack
+      end
+
       def process(task)
-        activity_processor = TaskProcessor.new(task, activity_lookup).process
-        # Add the activity processor to the end of the middleware stack, then call the first middleware which will
-        # recursively retrieve the result
-        @middleware_stack.push(activity_processor)
-        result = @middleware_stack.execute(task)
-        @middleware_stack.pop
-        result
+        @processor_stack.call(task)
       end
 
       def thread_pool

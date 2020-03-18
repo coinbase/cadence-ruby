@@ -4,11 +4,12 @@ require 'cadence/workflow/decider'
 module Cadence
   class Workflow
     class Poller
-      def initialize(domain, task_list, workflow_lookup)
+      def initialize(domain, task_list, workflow_lookup, middleware)
         @domain = domain
         @task_list = task_list
         @workflow_lookup = workflow_lookup
         @shutting_down = false
+        @middleware = middleware
       end
 
       def start
@@ -42,7 +43,7 @@ module Cadence
       end
 
       def poll_loop
-        while !shutting_down? do
+        until shutting_down? do
           Cadence.logger.debug("Polling for decision tasks (#{domain} / #{task_list})")
 
           task = poll_for_task
@@ -57,13 +58,27 @@ module Cadence
         nil
       end
 
+      def processor_stack
+        @processor_stack ||= build_processor_stack
+      end
+
+      def build_processor_stack
+        stack = lambda do |task|
+          start_time = Time.now
+
+          decider.process(task)
+
+          time_diff = (Time.now - start_time) * 1000
+          Cadence.logger.info("Decision task processed in #{time_diff}ms")
+        end
+        @middleware.each do |m|
+          stack = m.New(stack)
+        end
+        stack
+      end
+
       def process(task)
-        start_time = Time.now
-
-        decider.process(task)
-
-        time_diff = (Time.now - start_time) * 1000
-        Cadence.logger.info("Decision task processed in #{time_diff}ms")
+        @processor_stack.call(task)
       end
     end
   end
