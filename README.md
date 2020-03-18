@@ -91,8 +91,8 @@ Congratulation you've just created and executed a distributed workflow!
 To view more details about your execution, point your browser to
 <http://localhost:8088/domain/ruby-samples/workflows?range=last-3-hours&status=CLOSED>.
 
-There are plenty of [runnable examples](examples/)
-demonstrating various features of this library available, make sure to check them out.
+There are plenty of [runnable examples](examples/) demonstrating various features of this library
+available, make sure to check them out.
 
 
 ## Installing dependencies
@@ -217,6 +217,17 @@ class CloseUserAccountActivity < Cadence::Activity
 end
 ```
 
+It is important to make your activities **idempotent**, because they can get retried by Cadence (in
+case a timeout is reached or your activity has thrown an error). You normally want to avoid
+generating additional side effects during subsequent activity execution.
+
+To achieve this there are two methods (returning a UUID token) available from your activity class:
+
+- `activity.run_idem` — unique within for the current workflow execution (scoped to run_id)
+- `activity.workflow_idem` — unique across all execution of the workflow (scoped to workflow_id)
+
+Both tokens will remain the same across multiple retry attempts of the activity.
+
 
 ## Worker
 
@@ -238,6 +249,31 @@ or `INT` signal is received. By only registering a subset of your workflows/acti
 worker you can split processing across as many workers as you need.
 
 
+## Starting a workflow
+
+All communication is handled via Cadence service, so in order to start a workflow you need to send a
+message to Cadence:
+
+```ruby
+Cadence.start_workflow(HelloWorldWorkflow)
+```
+
+Optionally you can pass input and other options to the workflow:
+
+```ruby
+Cadence.start_workflow(RenewSubscriptionWorkflow, user_id, options: { workflow_id: user_id })
+```
+
+Passing in a `workflow_id` allows you to prevent concurrent execution of a workflow — a subsequent
+call with the same `workflow_id` will always get rejected while it is still running, raising
+`CadenceThrift::WorkflowExecutionAlreadyStartedError`. You can adjust the behaviour for finished
+workflows by supplying the `workflow_id_reuse_policy:` argument with one of these options:
+
+- `:allow_failed` will allow re-running workflows that have failed (terminated, cancelled, timed out or failed)
+- `:allow` will allow re-running any finished workflows both failed and completed
+- `:reject` will reject any subsequent attempt to run a workflow
+
+
 ## Execution Options
 
 There are lots of ways in which you can configure your Workflows and Activities. The common ones
@@ -249,12 +285,47 @@ of precedence):
 3. Globally, when configuring your Cadence library via `Cadence.configure`
 
 
+## Testing
+
+It is crucial to properly test your workflows and activities before running them in production. The
+provided testing framework is still limited in functionality, but will allow you to test basic
+use-cases.
+
+The testing framework is not required automatically when you require `cadence-ruby`, so you have to
+do this yourself (it is strongly recommended to only include this in your test environment,
+`spec_helper.rb` or similar):
+
+```ruby
+require 'cadence/testing'
+```
+
+This will allow you to execute workflows locally by running `HelloWorldWorkflow.execute_locally`.
+Any arguments provided will forwarded to your `#execute` method.
+
+In case of a higher level end-to-end integration specs, where you need to execute a Cadence workflow
+as part of your code, you can enable local testing:
+
+```ruby
+Cadence::Testing.local!
+```
+
+This will treat every `Cadence.start_workflow` call as local and perform your workflows inline. It
+also works with a block, restoring the original mode back after the execution:
+
+```ruby
+Cadence::Testing.local! do
+  Cadence.start_workflow(HelloWorldWorkflow)
+end
+```
+
+Make sure to check out [example integration specs](examples/specs/integration) for more details.
+
+
 ## TODO
 
 There's plenty of work to be done, but most importanly we need:
 
 - Write specs for everything
-- Provide a test context for workflows and activities to facilitate unit testing
 - Implement support for missing features
 
 
