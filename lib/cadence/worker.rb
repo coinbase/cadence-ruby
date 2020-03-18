@@ -3,7 +3,6 @@ require 'cadence/workflow/poller'
 require 'cadence/activity/poller'
 require 'cadence/execution_options'
 require 'cadence/executable_lookup'
-require 'cadence/middleware/middleware_stack'
 
 module Cadence
   class Worker
