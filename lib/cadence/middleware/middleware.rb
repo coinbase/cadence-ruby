@@ -6,7 +6,7 @@ module Cadence
     end
 
     def call(task)
-      raise NotImplementedError, '#process method must be implemented by a subclass'
+      raise NotImplementedError, '#call method must be implemented by a subclass'
     end
 
   end
