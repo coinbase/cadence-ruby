@@ -20,23 +20,10 @@ describe Cadence::Middleware::Chain do
     end
   end
 
-  class BrokenMiddleware < Cadence::Middleware
-    def call(task, &next_middleware)
-      task.name = 'test'
-      # Does not call next middleware, :grimace:
-      return nil
-    end
-  end
-
   describe '#invoke' do
     it 'returns the modified task name' do
       result = subject.invoke(test_task) { |task| task }
       expect(result.name).to eq('test')
-    end
-
-    it 'only allows single argument blocks to be passed' do
-      result = broken_subject.invoke(test_task) { |task| task }
-      print(result)
     end
   end
 
