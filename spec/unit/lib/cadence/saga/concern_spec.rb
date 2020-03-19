@@ -1,4 +1,5 @@
 require 'cadence/saga/concern'
+require 'cadence'
 
 describe Cadence::Saga::Concern do
   class TestSagaConcernActivity1 < Cadence::Activity; end

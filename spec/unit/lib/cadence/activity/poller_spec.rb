@@ -6,8 +6,9 @@ describe Cadence::Activity::Poller do
   let(:task_list) { 'test-task-list' }
   let(:lookup) { instance_double('Cadence::ExecutableLookup') }
   let(:thread_pool) { instance_double(Cadence::ThreadPool, wait_for_available_threads: nil) }
+  let(:middlewares) { [] }
 
-  subject { described_class.new(domain, task_list, lookup) }
+  subject { described_class.new(domain, task_list, lookup, middlewares) }
 
   before do
     allow(Cadence::Client).to receive(:generate).and_return(client)

@@ -1,4 +1,5 @@
 require 'cadence/activity/task_processor'
+require 'fabrication'
 
 describe Cadence::Activity::TaskProcessor do
   subject { described_class.new(task, lookup) }
