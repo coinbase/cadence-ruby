@@ -54,9 +54,7 @@ module Cadence
       history = Workflow::History.new(history_response.history.events)
       decision_task_event = history.last_completed_decision_task
 
-      unless decision_task_event
-        raise Error, 'Could not find a completed decision task event was not found'
-      end
+      raise Error, 'Could not find a completed decision task event' unless decision_task_event
 
       response = client.reset_workflow_execution(
         domain: domain,
