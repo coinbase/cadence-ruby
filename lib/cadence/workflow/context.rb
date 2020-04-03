@@ -12,15 +12,20 @@ require 'cadence/workflow/replay_aware_logger'
 module Cadence
   class Workflow
     class Context
-      def initialize(state_manager, dispatcher)
+      def initialize(state_manager, dispatcher, metadata)
         @state_manager = state_manager
         @dispatcher = dispatcher
+        @metadata = metadata
       end
 
       def logger
         @logger ||= ReplayAwareLogger.new(Cadence.logger)
         @logger.replay = state_manager.replay?
         @logger
+      end
+
+      def headers
+        metadata.headers
       end
 
       def execute_activity(activity_class, *input, **args)
@@ -36,7 +41,8 @@ module Cadence
           domain: execution_options.domain,
           task_list: execution_options.task_list,
           retry_policy: execution_options.retry_policy,
-          timeouts: execution_options.timeouts
+          timeouts: execution_options.timeouts,
+          headers: execution_options.headers
         )
 
         target, cancelation_id = schedule_decision(decision)
@@ -178,7 +184,7 @@ module Cadence
 
       private
 
-      attr_reader :state_manager, :dispatcher
+      attr_reader :state_manager, :dispatcher, :metadata
 
       def schedule_decision(decision)
         state_manager.schedule(decision)

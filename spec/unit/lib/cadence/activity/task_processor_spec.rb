@@ -1,16 +1,16 @@
 require 'cadence/activity/task_processor'
 
 describe Cadence::Activity::TaskProcessor do
-  subject { described_class.new(task, lookup) }
+  subject { described_class.new(task, lookup, client) }
 
   let(:lookup) { instance_double('Cadence::ExecutableLookup', find: nil) }
-  let(:task) { Fabricate(:activity_task, activity_name: activity_name, input: Oj.dump(input)) }
+  let(:task) do
+    Fabricate(:activity_task, activity_name: activity_name, input: Cadence::JSON.serialize(input))
+  end
   let(:metadata) { Cadence::Activity::Metadata.from_task(task) }
   let(:activity_name) { 'TestActivity' }
   let(:client) { instance_double('Cadence::Client::ThriftClient') }
   let(:input) { ['arg1', 'arg2'] }
-
-  before { allow(Cadence::Client).to receive(:generate).and_return(client) }
 
   describe '#process' do
     let(:context) { instance_double('Cadence::Activity::Context') }
@@ -21,6 +21,8 @@ describe Cadence::Activity::TaskProcessor do
 
       allow(client).to receive(:respond_activity_task_completed)
       allow(client).to receive(:respond_activity_task_failed)
+
+      allow(Cadence.metrics).to receive(:timing)
     end
 
     context 'when activity is not registered' do
@@ -76,6 +78,22 @@ describe Cadence::Activity::TaskProcessor do
 
           subject.process
         end
+
+        it 'sends queue_time metric' do
+          subject.process
+
+          expect(Cadence.metrics)
+            .to have_received(:timing)
+            .with('activity_task.queue_time', an_instance_of(Integer), activity: activity_name)
+        end
+
+        it 'sends latency metric' do
+          subject.process
+
+          expect(Cadence.metrics)
+            .to have_received(:timing)
+            .with('activity_task.latency', an_instance_of(Integer), activity: activity_name)
+        end
       end
 
       context 'when activity raises an exception' do
@@ -105,6 +123,22 @@ describe Cadence::Activity::TaskProcessor do
             .and_raise(StandardError)
 
           subject.process
+        end
+
+        it 'sends queue_time metric' do
+          subject.process
+
+          expect(Cadence.metrics)
+            .to have_received(:timing)
+            .with('activity_task.queue_time', an_instance_of(Integer), activity: activity_name)
+        end
+
+        it 'sends latency metric' do
+          subject.process
+
+          expect(Cadence.metrics)
+            .to have_received(:timing)
+            .with('activity_task.latency', an_instance_of(Integer), activity: activity_name)
         end
       end
     end
