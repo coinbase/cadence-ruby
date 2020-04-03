@@ -35,7 +35,7 @@ module Cadence
         execution_options = ExecutionOptions.new(activity_class, options)
 
         decision = Decision::ScheduleActivity.new(
-          activity_id: UUID.v5(activity_class.to_s, input.to_s + args.to_s),
+          activity_id: UUID.v5(metadata.run_id, activity_class.to_s + input.to_s + args.to_s),
           activity_type: execution_options.name,
           input: input,
           domain: execution_options.domain,
