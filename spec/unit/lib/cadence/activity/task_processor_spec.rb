@@ -2,8 +2,9 @@ require 'cadence/activity/task_processor'
 require 'cadence/middleware/chain'
 
 describe Cadence::Activity::TaskProcessor do
-  subject { described_class.new(task, lookup, client, middleware_chain) }
+  subject { described_class.new(task, domain, lookup, client, middleware_chain) }
 
+  let(:domain) { 'test-domain' }
   let(:lookup) { instance_double('Cadence::ExecutableLookup', find: nil) }
   let(:task) do
     Fabricate(:activity_task, activity_name: activity_name, input: Cadence::JSON.serialize(input))
@@ -20,7 +21,7 @@ describe Cadence::Activity::TaskProcessor do
     before do
       allow(Cadence::Metadata)
         .to receive(:generate)
-        .with(Cadence::Metadata::ACTIVITY_TYPE, task)
+        .with(Cadence::Metadata::ACTIVITY_TYPE, task, domain)
         .and_return(metadata)
       allow(Cadence::Activity::Context).to receive(:new).with(client, metadata).and_return(context)
 
