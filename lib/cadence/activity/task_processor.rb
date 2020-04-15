@@ -33,7 +33,8 @@ module Cadence
           activity_class.execute_in_context(context, JSON.deserialize(task.input))
         end
 
-        respond_completed(result)
+        # Do not complete asynchronous activities, these should be completed manually
+        respond_completed(result) unless context.async?
       rescue StandardError => error
         respond_failed(error.class.name, error.message)
       ensure
