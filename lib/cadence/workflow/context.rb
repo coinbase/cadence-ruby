@@ -121,7 +121,7 @@ module Cadence
       end
 
       def execute_workflow!(workflow_class, *input, **args)
-        future = execute_worfklow(workflow_class, *input, **args)
+        future = execute_workflow(workflow_class, *input, **args)
         result = future.get
 
         if future.failed?
@@ -151,7 +151,6 @@ module Cadence
       end
 
       def start_timer(timeout, timer_id = nil)
-        timer_id ||= SecureRandom.uuid
         decision = Decision::StartTimer.new(timeout: timeout, timer_id: timer_id)
         target, cancelation_id = schedule_decision(decision)
         future = Future.new(target, self, cancelation_id: cancelation_id)
