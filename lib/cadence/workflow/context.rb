@@ -136,9 +136,10 @@ module Cadence
       end
 
       def side_effect(&block)
-        marker = state_manager.check_next_marker
-        result = marker ? marker.last : block.call
+        marker = state_manager.next_marker('SIDE_EFFECT')
+        return marker.last if marker
 
+        result = block.call
         decision = Decision::RecordMarker.new(name: 'SIDE_EFFECT', details: result)
         schedule_decision(decision)
 

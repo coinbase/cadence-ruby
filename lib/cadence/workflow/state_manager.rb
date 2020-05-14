@@ -15,9 +15,10 @@ module Cadence
       def initialize(dispatcher)
         @dispatcher = dispatcher
         @decisions = []
-        @markers = {}
+        @marker_ids = Set.new
+        @markers = Hash.new { |hash, key| hash[key] = [] }
         @decision_tracker = Hash.new { |hash, key| hash[key] = DecisionStateMachine.new }
-        @next_event_id = -1
+        @last_event_id = 0
         @local_time = nil
         @replay = false
       end
@@ -27,7 +28,12 @@ module Cadence
       end
 
       def schedule(decision)
+        # Fast-forward event IDs to skip all the markers (version markers can
+        # be removed, so we can't rely on them being scheduled during a replay)
         decision_id = next_event_id
+        while marker_ids.include?(decision_id) do
+          decision_id = next_event_id
+        end
 
         cancelation_id =
           case decision
@@ -44,21 +50,23 @@ module Cadence
 
         decisions << [decision_id, decision]
 
-        @next_event_id += 1
-
         return [event_target_from(decision_id, decision), cancelation_id]
       end
 
-      def check_next_marker
-        markers[next_event_id]
+      def next_marker(type)
+        markers[type].shift
       end
 
       def apply(history_window)
         @replay = history_window.replay?
         @local_time = history_window.local_time
-        @next_event_id = history_window.last_event_id + 1
+        @last_event_id = history_window.last_event_id
 
-        history_window.markers.each { |id, name, details| markers[id] = [name, details] }
+        # handle markers first since their data is needed for processing events
+        history_window.markers.each do |id, type, details|
+          marker_ids << id
+          markers[type] << [id, JSON.deserialize(details)]
+        end
 
         history_window.events.each do |event|
           apply_event(event)
@@ -67,7 +75,11 @@ module Cadence
 
       private
 
-      attr_reader :dispatcher, :decision_tracker, :next_event_id, :markers
+      attr_reader :dispatcher, :decision_tracker, :markers, :marker_ids
+
+      def next_event_id
+        @last_event_id += 1
+      end
 
       def apply_event(event)
         state_machine = decision_tracker[event.decision_id]
@@ -171,8 +183,7 @@ module Cadence
           # todo
 
         when 'MarkerRecorded'
-          state_machine.complete
-          discard_decision(event.decision_id)
+          # no-op
 
         when 'WorkflowExecutionSignaled'
           dispatch(target, 'signaled', event.attributes.signalName, safe_parse(event.attributes.input))
