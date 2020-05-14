@@ -54,8 +54,6 @@ module Cadence
       end
 
       def apply(history_window)
-        previous_event = nil
-
         @replay = history_window.replay?
         @local_time = history_window.local_time
         @next_event_id = history_window.last_event_id + 1
@@ -63,8 +61,7 @@ module Cadence
         history_window.markers.each { |id, name, details| markers[id] = [name, details] }
 
         history_window.events.each do |event|
-          apply_event(event, previous_event)
-          previous_event = event
+          apply_event(event)
         end
       end
 
@@ -72,7 +69,7 @@ module Cadence
 
       attr_reader :dispatcher, :decision_tracker, :next_event_id, :markers
 
-      def apply_event(event, previous_event)
+      def apply_event(event)
         state_machine = decision_tracker[event.decision_id]
         target = History::EventTarget.from_event(event)
 
