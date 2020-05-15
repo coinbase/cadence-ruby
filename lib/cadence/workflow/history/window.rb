@@ -19,7 +19,7 @@ module Cadence
         def add(event)
           case event.type
           when 'MarkerRecorded'
-            markers << [event.id, event.attributes.markerName, event.attributes.details]
+            markers << event
           when 'DecisionTaskStarted'
             @last_event_id = event.id + 1 # one for completed
             @local_time = event.timestamp

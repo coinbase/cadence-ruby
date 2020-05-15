@@ -7,6 +7,7 @@ require 'cadence/workflow/history/event_target'
 require 'cadence/workflow/decision'
 require 'cadence/workflow/future'
 require 'cadence/workflow/replay_aware_logger'
+require 'cadence/workflow/state_manager'
 
 # This context class is available in the workflow implementation
 # and provides context and methods for interacting with Cadence
@@ -28,6 +29,14 @@ module Cadence
 
       def headers
         metadata.headers
+      end
+
+      def breaking_change(change_name, &block)
+        block.call if breaking_change_allowed?(change_name)
+      end
+
+      def breaking_change_allowed?(change_name)
+        state_manager.breaking_change?(change_name.to_s)
       end
 
       def execute_activity(activity_class, *input, **args)
@@ -136,11 +145,11 @@ module Cadence
       end
 
       def side_effect(&block)
-        marker = state_manager.next_marker('SIDE_EFFECT')
+        marker = state_manager.next_side_effect
         return marker.last if marker
 
         result = block.call
-        decision = Decision::RecordMarker.new(name: 'SIDE_EFFECT', details: result)
+        decision = Decision::RecordMarker.new(name: StateManager::SIDE_EFFECT_MARKER, details: result)
         schedule_decision(decision)
 
         result

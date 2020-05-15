@@ -8,7 +8,11 @@ require 'cadence/metadata'
 module Cadence
   class Workflow
     class StateManager
+      SIDE_EFFECT_MARKER = 'SIDE_EFFECT'.freeze
+      BREAKING_CHANGE_MARKER = 'BREAKING_CHANGE'.freeze
+
       class UnsupportedEvent < Cadence::InternalError; end
+      class UnsupportedMarkerType < Cadence::InternalError; end
 
       attr_reader :decisions, :local_time
 
@@ -16,7 +20,8 @@ module Cadence
         @dispatcher = dispatcher
         @decisions = []
         @marker_ids = Set.new
-        @markers = Hash.new { |hash, key| hash[key] = [] }
+        @breaking_changes = {}
+        @side_effects = []
         @decision_tracker = Hash.new { |hash, key| hash[key] = DecisionStateMachine.new }
         @last_event_id = 0
         @local_time = nil
@@ -53,8 +58,16 @@ module Cadence
         return [event_target_from(decision_id, decision), cancelation_id]
       end
 
-      def next_marker(type)
-        markers[type].shift
+      def breaking_change?(change_name)
+        if !breaking_changes.key?(change_name)
+          track_breaking_change(change_name)
+        end
+
+        breaking_changes[change_name]
+      end
+
+      def next_side_effect
+        side_effects.shift
       end
 
       def apply(history_window)
@@ -63,9 +76,8 @@ module Cadence
         @last_event_id = history_window.last_event_id
 
         # handle markers first since their data is needed for processing events
-        history_window.markers.each do |id, type, details|
-          marker_ids << id
-          markers[type] << [id, JSON.deserialize(details)]
+        history_window.markers.each do |event|
+          apply_event(event)
         end
 
         history_window.events.each do |event|
@@ -75,7 +87,7 @@ module Cadence
 
       private
 
-      attr_reader :dispatcher, :decision_tracker, :markers, :marker_ids
+      attr_reader :dispatcher, :decision_tracker, :marker_ids, :side_effects, :breaking_changes
 
       def next_event_id
         @last_event_id += 1
@@ -183,7 +195,8 @@ module Cadence
           # todo
 
         when 'MarkerRecorded'
-          # no-op
+          state_machine.complete
+          handle_marker(event.id, event.attributes.markerName, safe_parse(event.attributes.details))
 
         when 'WorkflowExecutionSignaled'
           dispatch(target, 'signaled', event.attributes.signalName, safe_parse(event.attributes.input))
@@ -270,6 +283,29 @@ module Cadence
 
       def discard_decision(decision_id)
         decisions.delete_if { |(id, _)| id == decision_id }
+      end
+
+      def handle_marker(id, type, details)
+        marker_ids << id
+
+        case type
+        when SIDE_EFFECT_MARKER
+          side_effects << [id, details]
+        when BREAKING_CHANGE_MARKER
+          breaking_changes[details] = true
+        else
+          raise UnsupportedMarkerType, event.type
+        end
+      end
+
+      def track_breaking_change(change_name)
+        # replay does not allow breaking changes unless explicitly recorded
+        if replay?
+          breaking_changes[change_name] = false
+        else
+          breaking_changes[change_name] = true
+          schedule(Decision::RecordMarker.new(name: 'BREAKING_CHANGE', details: change_name))
+        end
       end
 
       def safe_parse(binary)
