@@ -31,16 +31,8 @@ module Cadence
         metadata.headers
       end
 
-      def release?(release_name)
+      def has_release?(release_name)
         state_manager.release?(release_name.to_s)
-      end
-
-      def before_release(release_name, &block)
-        block.call unless release?(release_name)
-      end
-
-      def after_release(release_name, &block)
-        block.call if release?(release_name)
       end
 
       def execute_activity(activity_class, *input, **args)

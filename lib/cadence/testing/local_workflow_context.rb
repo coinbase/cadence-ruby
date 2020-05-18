@@ -24,16 +24,8 @@ module Cadence
         Cadence.logger
       end
 
-      def release?(change_name)
+      def has_release?(change_name)
         !disabled_releases.include?(change_name.to_s)
-      end
-
-      def before_release(release_name, &block)
-        block.call unless release?(release_name)
-      end
-
-      def after_release(release_name, &block)
-        block.call if release?(release_name)
       end
 
       def execute_activity(activity_class, *input, **args)

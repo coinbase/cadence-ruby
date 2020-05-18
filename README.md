@@ -342,7 +342,7 @@ behaviour. However, breaking changes are often needed and these include:
 - Rearranging existing activities, timers, child workflows, etc.
 - Adding/removing signal handlers
 
-In order to add a breaking change you can use `workflow.release?(release_name)` method in your
+In order to add a breaking change you can use `workflow.has_release?(release_name)` method in your
 workflows, which is guaranteed to return a consistent result whether or not it was called prior to
 shipping the new release. It is also consistent for all the subsequent calls with the same
 `release_name` — all of them will return the original result. Consider the following example:
@@ -368,19 +368,19 @@ class MyWorkflow < Cadence::Workflow
   def execute
     Activity1.execute!
 
-    if workflow.release?(:fix_1)
+    if workflow.has_release?(:fix_1)
       ActivityNew1.execute!
     end
 
     workflow.sleep(10)
 
-    if workflow.release?(:fix_1)
+    if workflow.has_release?(:fix_1)
       ActivityNew2.execute!
     else
       ActivityOld.execute!
     end
 
-    if workflow.release?(:fix_2)
+    if workflow.has_release?(:fix_2)
       ActivityNew3.execute!
     end
 
@@ -397,29 +397,6 @@ not.
 
 Later on you can clean it up and drop all the checks if you don't have any older workflows running
 or expect them to ever be executed (e.g. reset).
-
-You can also use the mutually exclusive helper methods `#before_release(release_name)` and
-`#after_release(release_name)` with a block:
-
-```ruby
-workflow.after_release(:fix_1) do
-  ActivityNew.execute!
-end
-
-workflow.before_release(:fix_1) do
-  ActivityOld.execute!
-end
-```
-
-this is identical to:
-
-```ruby
-if workflow.release?(:fix_1)
-  ActivityNew.execute!
-else
-  ActivityOld.execute!
-end
-```
 
 *NOTE: Releases with different names do not depend on each other in any way.*
 
