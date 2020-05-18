@@ -9,7 +9,7 @@ module Cadence
   class Workflow
     class StateManager
       SIDE_EFFECT_MARKER = 'SIDE_EFFECT'.freeze
-      BREAKING_CHANGE_MARKER = 'BREAKING_CHANGE'.freeze
+      RELEASE_MARKER = 'RELEASE'.freeze
 
       class UnsupportedEvent < Cadence::InternalError; end
       class UnsupportedMarkerType < Cadence::InternalError; end
@@ -20,7 +20,7 @@ module Cadence
         @dispatcher = dispatcher
         @decisions = []
         @marker_ids = Set.new
-        @breaking_changes = {}
+        @releases = {}
         @side_effects = []
         @decision_tracker = Hash.new { |hash, key| hash[key] = DecisionStateMachine.new }
         @last_event_id = 0
@@ -58,12 +58,10 @@ module Cadence
         return [event_target_from(decision_id, decision), cancelation_id]
       end
 
-      def breaking_change?(change_name)
-        if !breaking_changes.key?(change_name)
-          track_breaking_change(change_name)
-        end
+      def release?(release_name)
+        track_release(release_name) unless releases.key?(release_name)
 
-        breaking_changes[change_name]
+        releases[release_name]
       end
 
       def next_side_effect
@@ -87,7 +85,7 @@ module Cadence
 
       private
 
-      attr_reader :dispatcher, :decision_tracker, :marker_ids, :side_effects, :breaking_changes
+      attr_reader :dispatcher, :decision_tracker, :marker_ids, :side_effects, :releases
 
       def next_event_id
         @last_event_id += 1
@@ -291,20 +289,20 @@ module Cadence
         case type
         when SIDE_EFFECT_MARKER
           side_effects << [id, details]
-        when BREAKING_CHANGE_MARKER
-          breaking_changes[details] = true
+        when RELEASE_MARKER
+          releases[details] = true
         else
           raise UnsupportedMarkerType, event.type
         end
       end
 
-      def track_breaking_change(change_name)
-        # replay does not allow breaking changes unless explicitly recorded
+      def track_release(release_name)
+        # replay does not allow untracked (via marker) releases
         if replay?
-          breaking_changes[change_name] = false
+          releases[release_name] = false
         else
-          breaking_changes[change_name] = true
-          schedule(Decision::RecordMarker.new(name: 'BREAKING_CHANGE', details: change_name))
+          releases[release_name] = true
+          schedule(Decision::RecordMarker.new(name: RELEASE_MARKER, details: release_name))
         end
       end
 

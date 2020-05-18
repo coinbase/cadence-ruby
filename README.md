@@ -342,10 +342,10 @@ behaviour. However, breaking changes are often needed and these include:
 - Rearranging existing activities, timers, child workflows, etc.
 - Adding/removing signal handlers
 
-In order to add a breaking change you can use `workflow.breaking_change_allowed?(change_id)` method
-in your workflows, which is guaranteed to return a consistent result whether or not it was called
-prior to introducing a breaking change. It is also consistent for all the subsequent calls with the
-same `change_id` — all of them will return the original result. Consider the following example:
+In order to add a breaking change you can use `workflow.release?(release_name)` method in your
+workflows, which is guaranteed to return a consistent result whether or not it was called prior to
+shipping the new release. It is also consistent for all the subsequent calls with the same
+`release_name` — all of them will return the original result. Consider the following example:
 
 ```ruby
 class MyWorkflow < Cadence::Workflow
@@ -368,19 +368,19 @@ class MyWorkflow < Cadence::Workflow
   def execute
     Activity1.execute!
 
-    if workflow.breaking_change_allowed?(:fix_1)
+    if workflow.release?(:fix_1)
       ActivityNew1.execute!
     end
 
     workflow.sleep(10)
 
-    if workflow.breaking_change_allowed?(:fix_1)
+    if workflow.release?(:fix_1)
       ActivityNew2.execute!
     else
       ActivityOld.execute!
     end
 
-    if workflow.breaking_change_allowed?(:fix_2)
+    if workflow.release?(:fix_2)
       ActivityNew3.execute!
     end
 
@@ -389,15 +389,39 @@ class MyWorkflow < Cadence::Workflow
 end
 ```
 
-If the changes got deployed while the original workflow was waiting on a timer, `ActivityNew1` and
-`ActivityNew2` won't get executed, because they are part of the same change (same change_id),
-however `ActivityNew3` will get executed, since that breaking change wasn't yet checked at the time.
-And for every new execution of the workflow — all new activities will get executed, while
-`ActivityOld` will not.
+If the release got deployed while the original workflow was waiting on a timer, `ActivityNew1` and
+`ActivityNew2` won't get executed, because they are part of the same change (same release_name),
+however `ActivityNew3` will get executed, since the release wasn't yet checked at the time. And for
+every new execution of the workflow — all new activities will get executed, while `ActivityOld` will
+not.
 
 Later on you can clean it up and drop all the checks if you don't have any older workflows running
 or expect them to ever be executed (e.g. reset).
 
+You can also use the mutually exclusive helper methods `#before_release(release_name)` and
+`#after_release(release_name)` with a block:
+
+```ruby
+workflow.after_release(:fix_1) do
+  ActivityNew.execute!
+end
+
+workflow.before_release(:fix_1) do
+  ActivityOld.execute!
+end
+```
+
+this is identical to:
+
+```ruby
+if workflow.release?(:fix_1)
+  ActivityNew.execute!
+else
+  ActivityOld.execute!
+end
+```
+
+*NOTE: Releases with different names do not depend on each other in any way.*
 
 ## Testing
 

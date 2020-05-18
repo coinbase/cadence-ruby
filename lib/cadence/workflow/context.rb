@@ -31,12 +31,16 @@ module Cadence
         metadata.headers
       end
 
-      def breaking_change(change_name, &block)
-        block.call if breaking_change_allowed?(change_name)
+      def release?(release_name)
+        state_manager.release?(release_name.to_s)
       end
 
-      def breaking_change_allowed?(change_name)
-        state_manager.breaking_change?(change_name.to_s)
+      def before_release(release_name, &block)
+        block.call unless release?(release_name)
+      end
+
+      def after_release(release_name, &block)
+        block.call if release?(release_name)
       end
 
       def execute_activity(activity_class, *input, **args)
