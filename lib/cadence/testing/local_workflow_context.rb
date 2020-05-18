@@ -1,5 +1,6 @@
 require 'securerandom'
 require 'cadence/testing/local_activity_context'
+require 'cadence/testing/workflow_execution'
 require 'cadence/execution_options'
 require 'cadence/metadata/activity'
 require 'cadence/workflow/future'
@@ -10,16 +11,25 @@ module Cadence
     class LocalWorkflowContext
       attr_reader :headers
 
-      def initialize(execution = nil, workflow_id = nil, run_id = nil, headers = {})
+      def initialize(execution, workflow_id, run_id, disallowed_breaking_changes, headers = {})
         @last_event_id = 0
         @execution = execution
-        @run_id = run_id || SecureRandom.uuid
-        @workflow_id = workflow_id || SecureRandom.uuid
+        @run_id = run_id
+        @workflow_id = workflow_id
+        @disallowed_breaking_changes = disallowed_breaking_changes
         @headers = headers
       end
 
       def logger
         Cadence.logger
+      end
+
+      def breaking_change(change_name, &block)
+        block.call if breaking_change_allowed?(change_name)
+      end
+
+      def breaking_change_allowed?(change_name)
+        !disallowed_breaking_changes.include?(change_name.to_s)
       end
 
       def execute_activity(activity_class, *input, **args)
@@ -103,8 +113,13 @@ module Cadence
         options = args.delete(:options) || {}
         input << args unless args.empty?
 
+        execution = WorkflowExecution.new
+        workflow_id = SecureRandom.uuid
+        run_id = SecureRandom.uuid
         execution_options = ExecutionOptions.new(workflow_class, options)
-        context = LocalWorkflowContext.new(workflow_id, execution_options.headers)
+        context = Cadence::Testing::LocalWorkflowContext.new(
+          execution, workflow_id, run_id, workflow_class.disallowed_breaking_changes, execution_options.headers
+        )
 
         workflow_class.execute_in_context(context, input)
       end
@@ -164,7 +179,7 @@ module Cadence
 
       private
 
-      attr_reader :execution, :run_id, :workflow_id
+      attr_reader :execution, :run_id, :workflow_id, :disallowed_breaking_changes
 
       def next_event_id
         @last_event_id += 1
