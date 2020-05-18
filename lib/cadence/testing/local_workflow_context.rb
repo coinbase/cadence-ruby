@@ -11,12 +11,12 @@ module Cadence
     class LocalWorkflowContext
       attr_reader :headers
 
-      def initialize(execution, workflow_id, run_id, disallowed_breaking_changes, headers = {})
+      def initialize(execution, workflow_id, run_id, disabled_releases, headers = {})
         @last_event_id = 0
         @execution = execution
         @run_id = run_id
         @workflow_id = workflow_id
-        @disallowed_breaking_changes = disallowed_breaking_changes
+        @disabled_releases = disabled_releases
         @headers = headers
       end
 
@@ -24,12 +24,16 @@ module Cadence
         Cadence.logger
       end
 
-      def breaking_change(change_name, &block)
-        block.call if breaking_change_allowed?(change_name)
+      def release?(change_name)
+        !disabled_releases.include?(change_name.to_s)
       end
 
-      def breaking_change_allowed?(change_name)
-        !disallowed_breaking_changes.include?(change_name.to_s)
+      def before_release(release_name, &block)
+        block.call unless release?(release_name)
+      end
+
+      def after_release(release_name, &block)
+        block.call if release?(release_name)
       end
 
       def execute_activity(activity_class, *input, **args)
@@ -118,7 +122,7 @@ module Cadence
         run_id = SecureRandom.uuid
         execution_options = ExecutionOptions.new(workflow_class, options)
         context = Cadence::Testing::LocalWorkflowContext.new(
-          execution, workflow_id, run_id, workflow_class.disallowed_breaking_changes, execution_options.headers
+          execution, workflow_id, run_id, workflow_class.disabled_releases, execution_options.headers
         )
 
         workflow_class.execute_in_context(context, input)
@@ -179,7 +183,7 @@ module Cadence
 
       private
 
-      attr_reader :execution, :run_id, :workflow_id, :disallowed_breaking_changes
+      attr_reader :execution, :run_id, :workflow_id, :disabled_releases
 
       def next_event_id
         @last_event_id += 1
