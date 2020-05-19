@@ -6,6 +6,8 @@ require 'cadence/metadata'
 module Cadence
   class Workflow
     class DecisionTaskProcessor
+      MAX_FAILED_ATTEMPTS = 10
+
       def initialize(task, domain, workflow_lookup, client, middleware_chain)
         @task = task
         @domain = domain
@@ -38,7 +40,7 @@ module Cadence
 
         complete_task(decisions)
       rescue StandardError => error
-        Cadence.logger.error("Decison task for #{workflow_name} failed with: #{error.inspect}")
+        fail_task(error.inspect)
         Cadence.logger.debug(error.backtrace.join("\n"))
       ensure
         time_diff_ms = ((Time.now - start_time) * 1000).round
@@ -70,10 +72,13 @@ module Cadence
       def fail_task(message)
         Cadence.logger.error("Decision task for #{workflow_name} failed with: #{message}")
 
+        # Stop from getting into infinite loop if the error persists
+        return if task.attempt >= MAX_FAILED_ATTEMPTS
+
         client.respond_decision_task_failed(
           task_token: task_token,
           cause: CadenceThrift::DecisionTaskFailedCause::UNHANDLED_DECISION,
-          details: { message: message }
+          details: message
         )
       end
     end
