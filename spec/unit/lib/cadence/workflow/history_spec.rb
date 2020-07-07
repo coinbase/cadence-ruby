@@ -1,7 +1,4 @@
-# frozen_string_literal: true
-
 require 'cadence/workflow/history'
-require 'pry'
 
 describe Cadence::Workflow::History do
   let(:history) { described_class.new(events) }

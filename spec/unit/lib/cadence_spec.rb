@@ -1,6 +1,5 @@
 require 'cadence'
 require 'cadence/workflow'
-require 'pry'
 
 describe Cadence do
   describe 'client operations' do

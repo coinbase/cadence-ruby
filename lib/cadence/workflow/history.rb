@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require 'cadence/workflow/history/event'
 require 'cadence/workflow/history/window'
 
@@ -83,15 +81,11 @@ module Cadence
       attr_reader :iterator
 
       def next_event
-        iterator.next
-      rescue StandardError
-        nil
+        iterator.next rescue nil
       end
 
       def peek_event
-        iterator.peek
-      rescue StandardError
-        nil
+        iterator.peek rescue nil
       end
 
       def command?(event)

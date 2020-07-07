@@ -7,7 +7,6 @@ Dir[File.expand_path('../workflows/*.rb', __dir__)].each { |f| require f }
 Dir[File.expand_path('../activities/*.rb', __dir__)].each { |f| require f }
 Dir[File.expand_path('../middleware/*.rb', __dir__)].each { |f| require f }
 
-Cadence.register_domain('ruby-samples', 'A safe space for playing with Cadence Ruby')
 worker = Cadence::Worker.new
 
 worker.register_workflow(AsyncActivityWorkflow)
