@@ -113,6 +113,15 @@ module Cadence
       @metrics ||= Metrics.new(configuration.metrics_adapter)
     end
 
+    def get_workflow_history(domain:, workflow_id:, run_id:)
+      history_response = client.get_workflow_execution_history(
+        domain: domain,
+        workflow_id: workflow_id,
+        run_id: run_id
+      )
+      Workflow::History.new(history_response.history.events)
+    end
+
     private
 
     def client
@@ -120,12 +129,12 @@ module Cadence
     end
 
     def get_last_completed_decision_task(domain, workflow_id, run_id)
-      history_response = client.get_workflow_execution_history(
+      history = get_workflow_history(
         domain: domain,
         workflow_id: workflow_id,
         run_id: run_id
       )
-      history = Workflow::History.new(history_response.history.events)
+
       decision_task_event = history.last_completed_decision_task
 
       decision_task_event&.id
