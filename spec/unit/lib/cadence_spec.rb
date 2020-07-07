@@ -1,9 +1,14 @@
 require 'cadence'
 require 'cadence/workflow'
+require 'pry'
 
 describe Cadence do
   describe 'client operations' do
     let(:client) { instance_double(Cadence::Client::ThriftClient) }
+    class TestStartWorkflow < Cadence::Workflow
+      domain 'default-test-domain'
+      task_list 'default-test-task-list'
+    end
 
     before { allow(Cadence::Client).to receive(:generate).and_return(client) }
     after { described_class.remove_instance_variable(:@client) }
@@ -16,11 +21,6 @@ describe Cadence do
       before { allow(client).to receive(:start_workflow_execution).and_return(cadence_response) }
 
       context 'using a workflow class' do
-        class TestStartWorkflow < Cadence::Workflow
-          domain 'default-test-domain'
-          task_list 'default-test-task-list'
-        end
-
         it 'returns run_id' do
           result = described_class.start_workflow(TestStartWorkflow, 42)
 
@@ -203,6 +203,35 @@ describe Cadence do
         info = described_class.fetch_workflow_execution_info('domain', '111', '222')
 
         expect(info).to be_a(Cadence::Workflow::ExecutionInfo)
+      end
+    end
+
+    describe '.get_workflow_history' do
+      let(:cadence_response) do
+        CadenceThrift::StartWorkflowExecutionResponse.new(runId: 'xxx')
+      end
+      let(:response_mock) { double }
+      let(:history_mock) { double}
+      let(:event_mock) { double('EventMock', :eventId=> 1, :timestamp => Time.now.to_f, :eventType => 'ActivityTaskStarted', :eventAttributes => '') }
+  
+      before do
+        allow(client).to receive(:start_workflow_execution).and_return(cadence_response)
+        allow(history_mock).to receive(:events).and_return([event_mock])
+        allow(response_mock).to receive(:history).and_return(history_mock)
+      end
+
+      it 'wraps client get_workflow_execution_history' do
+          run_id = described_class.start_workflow(TestStartWorkflow, 42, options: { workflow_id: '123' })
+          expect(client).to receive(:get_workflow_execution_history).with(
+            domain: 'default-test-domain',
+            workflow_id: '123',
+            run_id: run_id
+          ).and_return(response_mock)
+          described_class.get_workflow_history(
+            domain:'default-test-domain',
+            workflow_id: '123',
+            run_id: run_id
+          )
       end
     end
 

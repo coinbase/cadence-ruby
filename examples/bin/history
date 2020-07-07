@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+require_relative '../init'
+
+Dir[File.expand_path('../workflows/*.rb', __dir__)].each { |f| require f }
+history = Cadence.get_workflow_history(domain: 'ruby-samples', workflow_id: '2c52e375-d8d8-416c-bacc-0cf4bddbe89e', run_id: 'db7d6ad0-0eeb-440a-adc9-cb0110126371')
+
+puts 'last failed: ' 
+puts history.last_failed_activity_task
+
+puts history.last_completed_activity_task
