@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'cadence/workflow/history/event'
 require 'cadence/workflow/history/window'
 
@@ -9,10 +11,6 @@ module Cadence
       def initialize(events)
         @events = events.map { |event| History::Event.new(event) }
         @iterator = @events.each
-      end
-
-      def last_completed_decision_task
-        events.select { |event| event.type == 'DecisionTaskCompleted' }.last
       end
 
       def last_completed_decision_task
@@ -37,10 +35,6 @@ module Cadence
 
       def last_timed_out_activity_task
         events.select { |event| event.type == 'ActivityTaskTimedOut' }.last
-      end
-
-      def last_started_activity_task
-        events.select { |event| event.type == 'ActivityTaskStarted' }.last
       end
 
       # It is very important to replay the History window by window in order to
@@ -89,11 +83,15 @@ module Cadence
       attr_reader :iterator
 
       def next_event
-        iterator.next rescue nil
+        iterator.next
+      rescue StandardError
+        nil
       end
 
       def peek_event
-        iterator.peek rescue nil
+        iterator.peek
+      rescue StandardError
+        nil
       end
 
       def command?(event)
