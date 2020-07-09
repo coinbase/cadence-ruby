@@ -4,10 +4,6 @@ require 'cadence/workflow'
 describe Cadence do
   describe 'client operations' do
     let(:client) { instance_double(Cadence::Client::ThriftClient) }
-    class TestStartWorkflow < Cadence::Workflow
-      domain 'default-test-domain'
-      task_list 'default-test-task-list'
-    end
 
     before { allow(Cadence::Client).to receive(:generate).and_return(client) }
     after { described_class.remove_instance_variable(:@client) }
@@ -20,6 +16,11 @@ describe Cadence do
       before { allow(client).to receive(:start_workflow_execution).and_return(cadence_response) }
 
       context 'using a workflow class' do
+        class TestStartWorkflow < Cadence::Workflow
+          domain 'default-test-domain'
+          task_list 'default-test-task-list'
+        end
+
         it 'returns run_id' do
           result = described_class.start_workflow(TestStartWorkflow, 42)
 
@@ -208,22 +209,22 @@ describe Cadence do
     describe '.get_workflow_history' do
       let(:response_mock) { double }
       let(:history_mock) { double}
-      let(:event_mock) { double('EventMock', :eventId=> 1, :timestamp => Time.now.to_f, :eventType => 'ActivityTaskStarted', :eventAttributes => '') }
+      let(:event_mock) { double('EventMock', eventId: 1, timestamp: Time.now.to_f, eventType: 'ActivityTaskStarted', eventAttributes: '') }
   
       before do
-        allow(client).to receive(:start_workflow_execution).and_return(response_mock)
         allow(history_mock).to receive(:events).and_return([event_mock])
         allow(response_mock).to receive(:history).and_return(history_mock)
+        allow(client).to receive(:get_workflow_execution_history).and_return(response_mock)
       end
 
       it 'wraps client get_workflow_execution_history' do
-          expect(client).to receive(:get_workflow_execution_history).with(
-            domain: 'default-test-domain',
-            workflow_id: '123',
-            run_id: '1234'
-          ).and_return(response_mock)
           described_class.get_workflow_history(
             domain:'default-test-domain',
+            workflow_id: '123',
+            run_id: '1234'
+          )
+          expect(client).to have_received(:get_workflow_execution_history).with(
+            domain: 'default-test-domain',
             workflow_id: '123',
             run_id: '1234'
           )
