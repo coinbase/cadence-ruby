@@ -206,30 +206,26 @@ describe Cadence do
     end
 
     describe '.get_workflow_history' do
-      let(:cadence_response) do
-        CadenceThrift::StartWorkflowExecutionResponse.new(runId: 'xxx')
-      end
       let(:response_mock) { double }
       let(:history_mock) { double}
       let(:event_mock) { double('EventMock', :eventId=> 1, :timestamp => Time.now.to_f, :eventType => 'ActivityTaskStarted', :eventAttributes => '') }
   
       before do
-        allow(client).to receive(:start_workflow_execution).and_return(cadence_response)
+        allow(client).to receive(:start_workflow_execution).and_return(response_mock)
         allow(history_mock).to receive(:events).and_return([event_mock])
         allow(response_mock).to receive(:history).and_return(history_mock)
       end
 
       it 'wraps client get_workflow_execution_history' do
-          run_id = described_class.start_workflow(TestStartWorkflow, 42, options: { workflow_id: '123' })
           expect(client).to receive(:get_workflow_execution_history).with(
             domain: 'default-test-domain',
             workflow_id: '123',
-            run_id: run_id
+            run_id: '1234'
           ).and_return(response_mock)
           described_class.get_workflow_history(
             domain:'default-test-domain',
             workflow_id: '123',
-            run_id: run_id
+            run_id: '1234'
           )
       end
     end

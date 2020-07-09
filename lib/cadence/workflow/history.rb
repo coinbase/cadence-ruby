@@ -15,26 +15,6 @@ module Cadence
         events.select { |event| event.type == 'DecisionTaskCompleted' }.last
       end
 
-      def last_failed_decision_task
-        events.select { |event| event.type == 'DecisionTaskFailed' }.last
-      end
-
-      def last_timed_out_decision_task
-        events.select { |event| event.type == 'DecisionTaskTimedOut' }.last
-      end
-
-      def last_completed_activity_task
-        events.select { |event| event.type == 'ActivityTaskCompleted' }.last
-      end
-
-      def last_failed_activity_task
-        events.select { |event| event.type == 'ActivityTaskFailed' }.last
-      end
-
-      def last_timed_out_activity_task
-        events.select { |event| event.type == 'ActivityTaskTimedOut' }.last
-      end
-
       # It is very important to replay the History window by window in order to
       # simulate the exact same state the workflow was in when it processed the
       # decision task for the first time.
