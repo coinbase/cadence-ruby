@@ -10,7 +10,7 @@ module Cadence
             startTimerDecisionAttributes:
               CadenceThrift::StartTimerDecisionAttributes.new(
                 timerId: object.timer_id.to_s,
-                startToFireTimeoutSeconds: object.timeout
+                startToFireTimeoutSeconds: object.timeout.to_i
               )
           )
         end
