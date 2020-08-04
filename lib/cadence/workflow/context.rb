@@ -155,6 +155,11 @@ module Cadence
         start_timer(timeout).wait
       end
 
+      def sleep_until(end_time)
+        delay = (end_time.to_time - now).to_i
+        sleep(delay) if delay > 0
+      end
+
       def start_timer(timeout, timer_id = nil)
         decision = Decision::StartTimer.new(timeout: timeout, timer_id: timer_id)
         target, cancelation_id = schedule_decision(decision)
