@@ -128,6 +128,11 @@ module Cadence
         ::Kernel.sleep timeout
       end
 
+      def sleep_until(end_time)
+        delay = (end_time.to_time - now).to_i
+        sleep(delay) if delay > 0
+      end
+
       def start_timer(timeout, timer_id = nil)
         raise NotImplementedError, 'not yet available for testing'
       end
