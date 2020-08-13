@@ -35,6 +35,8 @@ module Cadence
 
     def register_domain(name, description = nil)
       client.register_domain(name: name, description: description)
+    rescue CadenceThrift::DomainAlreadyExistsError
+      nil
     end
 
     def signal_workflow(workflow, signal, workflow_id, run_id, input = nil)
