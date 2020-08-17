@@ -178,6 +178,20 @@ describe Cadence do
           .to have_received(:register_domain)
           .with(name: 'new-domain', description: 'domain description')
       end
+
+      context 'when domain is already registered' do
+        before do
+          allow(client)
+            .to receive(:register_domain)
+            .and_raise(CadenceThrift::DomainAlreadyExistsError)
+        end
+
+        it 'does not raise error' do
+          expect do
+            described_class.register_domain('new-domain', 'domain description')
+          end.not_to raise_error
+        end
+      end
     end
 
     describe '.fetch_workflow_execution_info' do
@@ -210,7 +224,7 @@ describe Cadence do
       let(:response_mock) { double }
       let(:history_mock) { double}
       let(:event_mock) { double('EventMock', eventId: 1, timestamp: Time.now.to_f, eventType: 'ActivityTaskStarted', eventAttributes: '') }
-  
+
       before do
         allow(history_mock).to receive(:events).and_return([event_mock])
         allow(response_mock).to receive(:history).and_return(history_mock)
