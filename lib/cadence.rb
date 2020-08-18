@@ -87,6 +87,16 @@ module Cadence
       response.runId
     end
 
+    def terminate_workflow(domain, workflow_id, run_id, reason: 'manual termination', details: nil)
+      client.terminate_workflow_execution(
+        domain: domain,
+        workflow_id: workflow_id,
+        run_id: run_id,
+        reason: reason,
+        details: details
+      )
+    end
+
     def fetch_workflow_execution_info(domain, workflow_id, run_id)
       response = client.describe_workflow_execution(
         domain: domain,

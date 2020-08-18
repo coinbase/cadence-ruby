@@ -224,6 +224,44 @@ describe Cadence do
       end
     end
 
+    describe '.terminate_workflow' do
+      before { allow(client).to receive(:terminate_workflow_execution).and_return(nil) }
+
+      it 'terminates workflow execution' do
+        described_class.terminate_workflow('test-domain', 'xxx', 'yyy')
+
+        expect(client)
+          .to have_received(:terminate_workflow_execution)
+          .with(
+            domain: 'test-domain',
+            workflow_id: 'xxx',
+            run_id: 'yyy',
+            reason: 'manual termination',
+            details: nil
+          )
+      end
+
+      it 'terminates workflow execution with extra details' do
+        described_class.terminate_workflow(
+          'test-domain',
+          'xxx',
+          'yyy',
+          reason: 'test reason',
+          details: '{ "foo": "bar" }'
+        )
+
+        expect(client)
+          .to have_received(:terminate_workflow_execution)
+          .with(
+            domain: 'test-domain',
+            workflow_id: 'xxx',
+            run_id: 'yyy',
+            reason: 'test reason',
+            details: '{ "foo": "bar" }'
+          )
+      end
+    end
+
     describe '.fetch_workflow_execution_info' do
       let(:response) do
         instance_double(
