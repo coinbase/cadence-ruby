@@ -15,10 +15,11 @@ require 'cadence/workflow/state_manager'
 module Cadence
   class Workflow
     class Context
-      def initialize(state_manager, dispatcher, metadata)
+      def initialize(state_manager, dispatcher, metadata, history)
         @state_manager = state_manager
         @dispatcher = dispatcher
         @metadata = metadata
+        @history = history
       end
 
       def logger
@@ -40,9 +41,16 @@ module Cadence
         input << args unless args.empty?
 
         execution_options = ExecutionOptions.new(activity_class, options)
+        
+        # Creates a unique activity id that is idempotent for this activity call in the current
+        # sequence of decision tasks
+        idem_activity_id = UUID.v5(
+            metadata.run_id,
+            activity_class.to_s + input.to_s + args.to_s + @history.events.length.to_s
+        )
 
         decision = Decision::ScheduleActivity.new(
-          activity_id: options[:activity_id],
+          activity_id: idem_activity_id,
           activity_type: execution_options.name,
           input: input,
           domain: execution_options.domain,
