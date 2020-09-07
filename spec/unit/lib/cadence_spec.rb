@@ -72,6 +72,35 @@ describe Cadence do
             )
         end
 
+        it 'starts a cron workflow' do
+          described_class.start_workflow(
+            TestStartWorkflow,
+            42,
+            options: {
+              name: 'test-workflow',
+              domain: 'test-domain',
+              task_list: 'test-task-list',
+              headers: { 'Foo' => 'Bar' },
+              cron_schedule: '* * * * *'
+            }
+          )
+
+          expect(client)
+            .to have_received(:start_workflow_execution)
+            .with(
+              domain: 'test-domain',
+              workflow_id: an_instance_of(String),
+              workflow_name: 'test-workflow',
+              task_list: 'test-task-list',
+              input: [42],
+              task_timeout: Cadence.configuration.timeouts[:task],
+              execution_timeout: Cadence.configuration.timeouts[:execution],
+              workflow_id_reuse_policy: nil,
+              headers: { 'Foo' => 'Bar' },
+              cron_schedule: '* * * * *'
+            )
+        end
+
         it 'starts a workflow using a mix of input, keyword arguments and options' do
           described_class.start_workflow(
             TestStartWorkflow,
