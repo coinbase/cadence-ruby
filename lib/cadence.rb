@@ -28,7 +28,7 @@ module Cadence
         task_timeout: execution_options.timeouts[:task],
         workflow_id_reuse_policy: options[:workflow_id_reuse_policy],
         headers: execution_options.headers,
-        cronSchedule: execution_options.cron_schedule
+        cron_schedule: execution_options.cron_schedule
       )
 
       response.runId

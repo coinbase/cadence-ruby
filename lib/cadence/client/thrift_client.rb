@@ -65,7 +65,7 @@ module Cadence
         task_timeout:,
         workflow_id_reuse_policy: nil,
         headers: nil,
-        cronSchedule: nil
+        cron_schedule: nil
       )
         request = CadenceThrift::StartWorkflowExecutionRequest.new(
           identity: identity,
@@ -84,7 +84,7 @@ module Cadence
           header: CadenceThrift::Header.new(
             fields: headers
           ),
-          cronSchedule: cronSchedule
+          cronSchedule: cron_schedule
         )
 
         if workflow_id_reuse_policy

@@ -2,8 +2,7 @@ require 'cadence/concerns/executable'
 
 module Cadence
   class ExecutionOptions
-    attr_reader :name, :domain, :task_list, :retry_policy, :timeouts, :headers,
-                :cron_schedule
+    attr_reader :name, :domain, :task_list, :retry_policy, :timeouts, :headers
 
     def initialize(object, options = {})
       @name = options[:name] || object.to_s
