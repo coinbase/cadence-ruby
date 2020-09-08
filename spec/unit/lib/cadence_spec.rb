@@ -73,15 +73,16 @@ describe Cadence do
         end
 
         it 'starts a cron workflow' do
-          described_class.start_workflow(
+          described_class.schedule_workflow(
             TestStartWorkflow,
+            '* * * * *'
             42,
             options: {
               name: 'test-workflow',
               domain: 'test-domain',
               task_list: 'test-task-list',
               headers: { 'Foo' => 'Bar' },
-              cron_schedule: '* * * * *'
+
             }
           )
 
@@ -92,12 +93,12 @@ describe Cadence do
               workflow_id: an_instance_of(String),
               workflow_name: 'test-workflow',
               task_list: 'test-task-list',
+              cron_schedule: '* * * * *',
               input: [42],
               task_timeout: Cadence.configuration.timeouts[:task],
               execution_timeout: Cadence.configuration.timeouts[:execution],
               workflow_id_reuse_policy: nil,
-              headers: { 'Foo' => 'Bar' },
-              cron_schedule: '* * * * *'
+              headers: { 'Foo' => 'Bar' }
             )
         end
 
