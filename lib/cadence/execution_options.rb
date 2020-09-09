@@ -9,6 +9,7 @@ module Cadence
       @domain = options[:domain]
       @task_list = options[:task_list]
       @retry_policy = options[:retry_policy]
+      @cron_schedule = options[:cron_schedule]
       @timeouts = options[:timeouts] || {}
       @headers = options[:headers] || {}
 
