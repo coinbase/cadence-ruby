@@ -13,9 +13,14 @@ module Cadence
         reject: CadenceThrift::WorkflowIdReusePolicy::RejectDuplicate
       }.freeze
 
-      def initialize(host, port, identity)
+      DEFAULT_OPTIONS = {
+        polling_ttl: 60 # 1 minute
+      }.freeze
+
+      def initialize(host, port, identity, options = {})
         @url = "http://#{host}:#{port}"
         @identity = identity
+        @options = DEFAULT_OPTIONS.merge(options)
         @mutex = Mutex.new
       end
 
@@ -324,7 +329,7 @@ module Cadence
 
       private
 
-      attr_reader :url, :identity, :mutex
+      attr_reader :url, :identity, :options, :mutex
 
       def transport
         @transport ||= Thrift::HTTPClientTransport.new(url).tap do |http|
@@ -332,7 +337,7 @@ module Cadence
             'Rpc-Caller' => 'ruby-client',
             'Rpc-Encoding' => 'thrift',
             'Rpc-Service' => 'cadence-proxy',
-            'Context-TTL-MS' => '25000'
+            'Context-TTL-MS' => (options[:polling_ttl] * 1_000).to_s
           )
         end
       end

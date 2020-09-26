@@ -16,12 +16,12 @@ describe Cadence::Activity::Poller do
     allow(Cadence::Client).to receive(:generate).and_return(client)
     allow(Cadence::ThreadPool).to receive(:new).and_return(thread_pool)
     allow(Cadence::Middleware::Chain).to receive(:new).and_return(middleware_chain)
+    allow(client).to receive(:poll_for_activity_task).and_return(nil)
   end
 
   describe '#start' do
     it 'polls for activity tasks' do
       allow(subject).to receive(:shutting_down?).and_return(false, false, true)
-      allow(client).to receive(:poll_for_activity_task).and_return(nil)
 
       subject.start
 
@@ -32,6 +32,33 @@ describe Cadence::Activity::Poller do
         .to have_received(:poll_for_activity_task)
         .with(domain: domain, task_list: task_list)
         .twice
+    end
+
+    context 'with options passed' do
+      subject { described_class.new(domain, task_list, lookup, middleware, options) }
+      let(:options) { { polling_ttl: 42, thread_pool_size: 42 } }
+
+      before do
+        allow(subject).to receive(:shutting_down?).and_return(false, true)
+      end
+
+      it 'passes options to the client' do
+        subject.start
+
+        # stop poller before inspecting
+        subject.stop; subject.wait
+
+        expect(Cadence::Client).to have_received(:generate).with(options)
+      end
+
+      it 'creates thread pool of a specified size' do
+        subject.start
+
+        # stop poller before inspecting
+        subject.stop; subject.wait
+
+        expect(Cadence::ThreadPool).to have_received(:new).with(42)
+      end
     end
 
     context 'when an activity task is received' do

@@ -7,7 +7,7 @@ Dir[File.expand_path('../workflows/*.rb', __dir__)].each { |f| require f }
 Dir[File.expand_path('../activities/*.rb', __dir__)].each { |f| require f }
 Dir[File.expand_path('../middleware/*.rb', __dir__)].each { |f| require f }
 
-worker = Cadence::Worker.new
+worker = Cadence::Worker.new(polling_ttl: 10, thread_pool_size: 20)
 
 worker.register_workflow(AsyncActivityWorkflow)
 worker.register_workflow(AsyncHelloWorldWorkflow)

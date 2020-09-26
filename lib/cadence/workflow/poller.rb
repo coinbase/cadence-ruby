@@ -5,11 +5,12 @@ require 'cadence/workflow/decision_task_processor'
 module Cadence
   class Workflow
     class Poller
-      def initialize(domain, task_list, workflow_lookup, middleware = [])
+      def initialize(domain, task_list, workflow_lookup, middleware = [], options = {})
         @domain = domain
         @task_list = task_list
         @workflow_lookup = workflow_lookup
         @middleware = middleware
+        @options = options
         @shutting_down = false
       end
 
@@ -29,10 +30,10 @@ module Cadence
 
       private
 
-      attr_reader :domain, :task_list, :client, :workflow_lookup, :middleware
+      attr_reader :domain, :task_list, :client, :workflow_lookup, :middleware, :options
 
       def client
-        @client ||= Cadence::Client.generate
+        @client ||= Cadence::Client.generate(options)
       end
 
       def middleware_chain
