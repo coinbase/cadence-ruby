@@ -7,7 +7,8 @@ require 'cadence/middleware/entry'
 
 module Cadence
   class Worker
-    def initialize
+    def initialize(options = {})
+      @options = options
       @workflows = Hash.new { |hash, key| hash[key] = ExecutableLookup.new }
       @activities = Hash.new { |hash, key| hash[key] = ExecutableLookup.new }
       @pollers = []
@@ -66,18 +67,19 @@ module Cadence
 
     private
 
-    attr_reader :activities, :workflows, :pollers, :decision_middleware, :activity_middleware
+    attr_reader :options, :activities, :workflows, :pollers,
+                :decision_middleware, :activity_middleware
 
     def shutting_down?
       @shutting_down
     end
 
     def workflow_poller_for(domain, task_list, lookup)
-      Workflow::Poller.new(domain, task_list, lookup.freeze, decision_middleware)
+      Workflow::Poller.new(domain, task_list, lookup.freeze, decision_middleware, options)
     end
 
     def activity_poller_for(domain, task_list, lookup)
-      Activity::Poller.new(domain, task_list, lookup.freeze, activity_middleware)
+      Activity::Poller.new(domain, task_list, lookup.freeze, activity_middleware, options)
     end
 
     def trap_signals
