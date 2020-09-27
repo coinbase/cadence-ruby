@@ -5,10 +5,10 @@ require 'cadence/workflow/dispatcher'
 describe Cadence::Workflow::Context do
     let(:state_manager) { instance_double('Cadence::Workflow::StateManager') }
     let(:dispatcher) { Cadence::Workflow::Dispatcher.new }
-    let(:metadata_hash) do 
+    let(:metadata_hash) do
         {name: 'TestWorkflow', run_id: SecureRandom.uuid, attempt: 0}
     end
-    let(:metadata) { Cadence::Metadata::Workflow.new(metadata_hash) }
+    let(:metadata) { Cadence::Metadata::Workflow.new(**metadata_hash) }
     let(:context) { described_class.new(state_manager, dispatcher, metadata) }
 
     describe '.sleep_until' do

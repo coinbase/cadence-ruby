@@ -4,7 +4,7 @@ require 'cadence/metadata/activity'
 describe Cadence::Activity::Context do
   let(:client) { instance_double('Cadence::Client::ThriftClient') }
   let(:metadata_hash) { Fabricate(:activity_metadata).to_h }
-  let(:metadata) { Cadence::Metadata::Activity.new(metadata_hash) }
+  let(:metadata) { Cadence::Metadata::Activity.new(**metadata_hash) }
   let(:task_token) { SecureRandom.uuid }
 
   subject { described_class.new(client, metadata) }
