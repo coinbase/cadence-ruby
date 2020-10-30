@@ -10,6 +10,7 @@ describe Cadence::Metadata::Workflow do
       expect(subject.run_id).to eq(args.run_id)
       expect(subject.attempt).to eq(args.attempt)
       expect(subject.headers).to eq(args.headers)
+      expect(subject.timeouts).to eq(args.timeouts)
     end
 
     it { is_expected.to be_frozen }

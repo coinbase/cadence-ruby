@@ -3,9 +3,9 @@ require 'cadence/metadata/base'
 module Cadence
   module Metadata
     class Decision < Base
-      attr_reader :domain, :id, :task_token, :attempt, :workflow_run_id, :workflow_id, :workflow_name
+      attr_reader :domain, :id, :task_token, :attempt, :workflow_run_id, :workflow_id, :workflow_name, :timeouts
 
-      def initialize(domain:, id:, task_token:, attempt:, workflow_run_id:, workflow_id:, workflow_name:)
+      def initialize(domain:, id:, task_token:, attempt:, workflow_run_id:, workflow_id:, workflow_name:, timeouts:)
         @domain = domain
         @id = id
         @task_token = task_token
@@ -13,6 +13,7 @@ module Cadence
         @workflow_run_id = workflow_run_id
         @workflow_id = workflow_id
         @workflow_name = workflow_name
+        @timeouts = timeouts
 
         freeze
       end
