@@ -5,7 +5,7 @@ module Cadence
     class Decision < Base
       attr_reader :domain, :id, :task_token, :attempt, :workflow_run_id, :workflow_id, :workflow_name, :timeouts
 
-      def initialize(domain:, id:, task_token:, attempt:, workflow_run_id:, workflow_id:, workflow_name:, timeouts:)
+      def initialize(domain:, id:, task_token:, attempt:, workflow_run_id:, workflow_id:, workflow_name:)
         @domain = domain
         @id = id
         @task_token = task_token
@@ -13,7 +13,6 @@ module Cadence
         @workflow_run_id = workflow_run_id
         @workflow_id = workflow_id
         @workflow_name = workflow_name
-        @timeouts = timeouts
 
         freeze
       end

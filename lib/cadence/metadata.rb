@@ -25,17 +25,6 @@ module Cadence
 
       private
 
-      def timeouts(object)
-        {
-          execution: object.executionStartToCloseTimeoutSeconds,
-          task: object.taskStartToCloseTimeoutSeconds,
-          schedule_to_close: object.scheduleToCloseTimeoutSeconds,
-          schedule_to_start: object.scheduleToStartTimeoutSeconds,
-          start_to_close: object.startToCloseTimeoutSeconds,
-          heartbeat: object.heartbeatTimeoutSeconds
-        }
-      end
-
       def activity_metadata_from(task, domain)
         Metadata::Activity.new(
           domain: domain,
@@ -47,7 +36,11 @@ module Cadence
           workflow_id: task.workflowExecution.workflowId,
           workflow_name: task.workflowType.name,
           headers: task.header&.fields || {},
-          timeouts: timeouts(task),
+          timeouts: {
+            start_to_close: task.startToCloseTimeoutSeconds,
+            schedule_to_close: task.scheduleToCloseTimeoutSeconds,
+            heartbeat: task.heartbeatTimeoutSeconds
+          }
         )
       end
 
@@ -59,8 +52,7 @@ module Cadence
           attempt: task.attempt,
           workflow_run_id: task.workflowExecution.runId,
           workflow_id: task.workflowExecution.workflowId,
-          workflow_name: task.workflowType.name,
-          timeouts: timeouts(task)
+          workflow_name: task.workflowType.name
         )
       end
 
@@ -70,7 +62,10 @@ module Cadence
           run_id: event.originalExecutionRunId,
           attempt: event.attempt,
           headers: event.header&.fields || {},
-          timeouts: timeouts(event)
+          timeouts: {
+            execution: event.executionStartToCloseTimeoutSeconds,
+            task: event.taskStartToCloseTimeoutSeconds
+          }
         )
       end
     end

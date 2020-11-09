@@ -13,7 +13,6 @@ describe Cadence::Metadata::Decision do
       expect(subject.workflow_run_id).to eq(args.workflow_run_id)
       expect(subject.workflow_id).to eq(args.workflow_id)
       expect(subject.workflow_name).to eq(args.workflow_name)
-      expect(subject.timeouts).to eq(args.timeouts)
     end
 
     it { is_expected.to be_frozen }

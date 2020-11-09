@@ -14,7 +14,7 @@ Fabricator(:activity_task_thrift, from: CadenceThrift::PollForActivityTaskRespon
   scheduledTimestampOfThisAttempt { Cadence::Utils.time_to_nanos(Time.now) }
   startedTimestamp { Cadence::Utils.time_to_nanos(Time.now) }
   header { |attrs| Fabricate(:header_thrift, fields: attrs[:headers]) if attrs[:headers] }
-  scheduleToCloseTimeoutSeconds { 15 }
-  startToCloseTimeoutSeconds { 25 }
-  heartbeatTimeoutSeconds { 5 }
+  scheduleToCloseTimeoutSeconds 15
+  startToCloseTimeoutSeconds 25
+  heartbeatTimeoutSeconds 5
 end
