@@ -11,4 +11,6 @@ Fabricator(
   originalExecutionRunId { SecureRandom.uuid }
   attempt 1
   header { |attrs| Fabricate(:header_thrift, fields: attrs[:headers]) if attrs[:headers] }
+  executionStartToCloseTimeoutSeconds 25
+  taskStartToCloseTimeoutSeconds 15
 end

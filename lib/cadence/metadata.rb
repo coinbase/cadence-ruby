@@ -35,7 +35,12 @@ module Cadence
           workflow_run_id: task.workflowExecution.runId,
           workflow_id: task.workflowExecution.workflowId,
           workflow_name: task.workflowType.name,
-          headers: task.header&.fields || {}
+          headers: task.header&.fields || {},
+          timeouts: {
+            start_to_close: task.startToCloseTimeoutSeconds,
+            schedule_to_close: task.scheduleToCloseTimeoutSeconds,
+            heartbeat: task.heartbeatTimeoutSeconds
+          }
         )
       end
 
@@ -56,7 +61,11 @@ module Cadence
           name: event.workflowType.name,
           run_id: event.originalExecutionRunId,
           attempt: event.attempt,
-          headers: event.header&.fields || {}
+          headers: event.header&.fields || {},
+          timeouts: {
+            execution: event.executionStartToCloseTimeoutSeconds,
+            task: event.taskStartToCloseTimeoutSeconds
+          }
         )
       end
     end
