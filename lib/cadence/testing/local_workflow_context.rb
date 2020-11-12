@@ -48,7 +48,12 @@ module Cadence
           workflow_run_id: run_id,
           workflow_id: workflow_id,
           workflow_name: nil, # not yet used, but will be in the future
-          headers: execution_options.headers
+          headers: execution_options.headers,
+          timeouts: {
+            start_to_close: 30,
+            schedule_to_close: 60,
+            heartbeat: 5
+          }
         )
         context = LocalActivityContext.new(metadata)
 
@@ -94,7 +99,12 @@ module Cadence
           workflow_run_id: run_id,
           workflow_id: workflow_id,
           workflow_name: nil, # not yet used, but will be in the future
-          headers: execution_options.headers
+          headers: execution_options.headers,
+          timeouts: {
+            schedule_to_close: 60,
+            start_to_close: 30,
+            heartbeat: 5
+          }
         )
         context = LocalActivityContext.new(metadata)
 
