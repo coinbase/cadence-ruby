@@ -75,7 +75,7 @@ describe Cadence do
         it 'starts a cron workflow' do
           described_class.schedule_workflow(
             TestStartWorkflow,
-            '* * * * *'
+            '* * * * *',
             42,
             options: {
               name: 'test-workflow',

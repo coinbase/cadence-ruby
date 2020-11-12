@@ -6,7 +6,7 @@ describe Cadence::Workflow::Context do
     let(:state_manager) { instance_double('Cadence::Workflow::StateManager') }
     let(:dispatcher) { Cadence::Workflow::Dispatcher.new }
     let(:metadata_hash) do 
-        {name: 'TestWorkflow', run_id: SecureRandom.uuid, attempt: 0}
+        {name: 'TestWorkflow', run_id: SecureRandom.uuid, attempt: 0, timeouts: { execution: 15, task: 10 } }
     end
     let(:metadata) { Cadence::Metadata::Workflow.new(metadata_hash) }
     let(:context) { described_class.new(state_manager, dispatcher, metadata) }
