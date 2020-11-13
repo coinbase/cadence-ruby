@@ -1,11 +1,11 @@
 require 'cadence/utils'
 
 describe Cadence::Utils do
-  let(:time) { Time.new(2020, 4, 28, 15, 23, 16) }
+  let(:timestamp) { 1588083796538941000 }
+  let(:time) { Time.at(timestamp / described_class::NANO) }
 
   describe '.time_from_nanos' do
     subject { described_class.time_from_nanos(timestamp) }
-    let(:timestamp) { 1588083796538941000 }
 
     it 'returns time' do
       expect(subject.to_i).to eq(time.to_i)
