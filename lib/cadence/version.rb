@@ -1,3 +1,3 @@
 module Cadence
-  VERSION = '0.0.1-pre43'.freeze
+  VERSION = '0.0.1-pre44'.freeze
 end
