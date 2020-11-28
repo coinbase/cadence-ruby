@@ -20,7 +20,7 @@ module Cadence
 
       def stop
         @shutting_down = true
-        Thread.new { Cadence.logger.info('Shutting down a workflow poller') }.join
+        Cadence.logger.info('Shutting down a workflow poller')
       end
 
       def wait

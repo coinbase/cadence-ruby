@@ -51,16 +51,17 @@ module Cadence
 
       pollers.each(&:start)
 
-      # wait until instructed to shut down
-      while !shutting_down? do
-        sleep 1
-      end
+      # keep the main worker thread alive
+      sleep(1) while !shutting_down?
     end
 
     def stop
       @shutting_down = true
-      pollers.each(&:stop)
-      pollers.each(&:wait)
+
+      Thread.new do
+        pollers.each(&:stop)
+        pollers.each(&:wait)
+      end.join
     end
 
     private

@@ -6,7 +6,9 @@ describe Cadence::Activity::Poller do
   let(:domain) { 'test-domain' }
   let(:task_list) { 'test-task-list' }
   let(:lookup) { instance_double('Cadence::ExecutableLookup') }
-  let(:thread_pool) { instance_double(Cadence::ThreadPool, wait_for_available_threads: nil) }
+  let(:thread_pool) do
+    instance_double(Cadence::ThreadPool, wait_for_available_threads: nil, shutdown: nil)
+  end
   let(:middleware_chain) { instance_double(Cadence::Middleware::Chain) }
   let(:middleware) { [] }
 
@@ -108,6 +110,19 @@ describe Cadence::Activity::Poller do
           .to have_received(:error)
           .with('Unable to poll for an activity task: #<StandardError: StandardError>')
       end
+    end
+  end
+
+  describe '#wait' do
+    before do
+      subject.start
+      subject.stop
+    end
+
+    it 'shuts down the thread poll' do
+      subject.wait
+
+      expect(thread_pool).to have_received(:shutdown)
     end
   end
 end
