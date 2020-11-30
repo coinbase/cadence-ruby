@@ -37,6 +37,10 @@ module Cadence
         respond_completed(result) unless context.async?
       rescue StandardError, ScriptError => error
         respond_failed(error.class.name, error.message)
+      rescue Exception => error
+        Cadence.logger.fatal("Activity #{activity_name} unexpectedly failed with: #{error.inspect}")
+        Cadence.logger.debug(error.backtrace.join("\n"))
+        raise
       ensure
         time_diff_ms = ((Time.now - start_time) * 1000).round
         Cadence.metrics.timing('activity_task.latency', time_diff_ms, activity: activity_name)

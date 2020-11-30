@@ -23,11 +23,12 @@ module Cadence
 
       def stop
         @shutting_down = true
-        Thread.new { Cadence.logger.info('Shutting down activity poller') }.join
+        Cadence.logger.info('Shutting down activity poller')
       end
 
       def wait
         thread.join
+        thread_pool.shutdown
       end
 
       private

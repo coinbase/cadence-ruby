@@ -50,14 +50,19 @@ module Cadence
     def poll
       catch(EXIT_SYMBOL) do
         loop do
-          job = @queue.pop
-          job.call
+          run(@queue.pop)
           @mutex.synchronize do
             @available_threads += 1
             @availability.signal
           end
         end
       end
+    end
+
+    def run(job)
+      job.call if job
+    rescue Exception
+      # Make sure we don't loose a thread
     end
   end
 end
