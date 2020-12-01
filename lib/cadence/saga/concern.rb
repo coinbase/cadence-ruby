@@ -9,14 +9,21 @@ module Cadence
 
         block.call(saga)
 
-        Result.new(true)
+        Result.new(Result::COMPLETED)
       rescue StandardError => error # TODO: is there a need for a specialized error here?
         logger.error("Saga execution aborted: #{error.inspect}")
         logger.debug(error.backtrace.join("\n"))
 
-        saga.compensate
+        if compensable?(error)
+          saga.compensate
+          Result.new(Result::COMPENSATED, error)
+        else
+          Result.new(Result::FAILED, error)
+        end
+      end
 
-        Result.new(false, error)
+      def compensable?(error)
+        !self.class.respond_to?(:compensable?) || self.class.compensable?(error)
       end
     end
   end
