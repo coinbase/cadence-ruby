@@ -4,26 +4,31 @@ require 'cadence/saga/result'
 module Cadence
   module Saga
     module Concern
-      def run_saga(&block)
+      def run_saga(configuration = {}, &block)
         saga = Cadence::Saga::Saga.new(workflow)
 
         block.call(saga)
 
-        Result.new(Result::COMPLETED)
+        Result.new(true)
       rescue StandardError => error # TODO: is there a need for a specialized error here?
         logger.error("Saga execution aborted: #{error.inspect}")
         logger.debug(error.backtrace.join("\n"))
 
-        if compensable?(error)
+        if compensable?(error, configuration)
+          logger.error('Saga compensating')
           saga.compensate
-          Result.new(Result::COMPENSATED, error)
+          Result.new(false, error)
         else
-          Result.new(Result::FAILED, error)
+          logger.error('Saga not compensating')
+          raise error
         end
       end
 
-      def compensable?(error)
-        !self.class.respond_to?(:compensable?) || self.class.compensable?(error)
+      def compensable?(error, compensable_errors: nil, non_compensable_errors: nil)
+        error_class = error.class
+        (compensable_errors.nil? && non_compensable_errors.nil?) ||
+          (compensable_errors&.include?(error_class) ||
+            non_compensable_errors && !non_compensable_errors.include?(error_class))
       end
     end
   end

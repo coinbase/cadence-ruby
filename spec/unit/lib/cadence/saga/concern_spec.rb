@@ -8,8 +8,8 @@ describe Cadence::Saga::Concern do
   class TestSagaConcernWorkflow < Cadence::Workflow
     include Cadence::Saga::Concern
 
-    def execute
-      result = run_saga do |saga|
+    def execute(non_compensable_errors: nil, compensable_errors: nil)
+      result = run_saga(non_compensable_errors: non_compensable_errors, compensable_errors: compensable_errors) do |saga|
         TestSagaConcernActivity1.execute!
         saga.add_compensation(TestSagaConcernActivity2, 42)
         TestSagaConcernActivity3.execute!
@@ -18,13 +18,6 @@ describe Cadence::Saga::Concern do
       return result
     end
   end
-
-  class TestSagaConcernNonCompensableWorkflow < TestSagaConcernWorkflow
-    def compensable?(error)
-      false
-    end
-  end
-
   class TestSagaConcernError < StandardError
     def backtrace
       ['line 1', 'line 2']
@@ -93,7 +86,7 @@ describe Cadence::Saga::Concern do
       expect(logger).to have_received(:debug).with("line 1\nline 2")
     end
 
-    describe 'compensate? true' do
+    describe 'compensates' do
       subject { TestSagaConcernWorkflow.new(context) }
 
       it 'performs compensation' do
@@ -111,39 +104,27 @@ describe Cadence::Saga::Concern do
       end
     end
 
-    describe 'compensate? false' do
-      subject { TestSagaConcernNonCompensableWorkflow.new(context) }
-
-      it 'does not perform compensation' do
-        subject.execute
-
+    context 'non_compensable_errors' do
+      it 'raises error and does not perform compensation if error included' do
+        expect { subject.execute(non_compensable_errors: [TestSagaConcernError]) }.to raise_error(TestSagaConcernError)
         expect_saga_not_to_be_compensated
       end
 
-      it 'returns failed result' do
-        result = subject.execute
-
-        expect(result).to be_instance_of(Cadence::Saga::Result)
-        expect(result).to be_failed
-        expect(result.rollback_reason).to eq(error)
+      it 'raises error and does not perform compensation if error excluded' do
+        subject.execute(non_compensable_errors: [StandardError])
+        expect_saga_to_be_compensated
       end
     end
 
-    context 'compensable?' do
-      it 'compensable? is true if not defined on class' do
-        expect(subject.compensable?(TestSagaConcernError)).to be_truthy
+    context 'compensable_errors' do
+      it 'compensates and does not raise error if error included' do
+        subject.execute(compensable_errors: [TestSagaConcernError])
+        expect_saga_to_be_compensated
       end
 
-      class TestClassCompensableWorkflow < TestSagaConcernWorkflow
-        def self.compensable?(error)
-          true
-        end
-      end
-
-      it 'compensable? calls class compensable? if defined' do
-        allow(TestClassCompensableWorkflow).to receive(:compensable?)
-        result = TestClassCompensableWorkflow.new(context).execute
-        expect(TestClassCompensableWorkflow).to have_received(:compensable?)
+      it 'raises error and does not compensate if error excluded' do
+        expect { subject.execute(compensable_errors: [StandardError]) }.to raise_error(TestSagaConcernError)
+        expect_saga_not_to_be_compensated
       end
     end
   end

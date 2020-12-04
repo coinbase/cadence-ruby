@@ -1,31 +1,21 @@
 module Cadence
   module Saga
     class Result
-      STATUSES = [
-        COMPLETED = :completed,
-        COMPENSATED = :compensated,
-        FAILED = :failed
-      ]
-
       attr_reader :rollback_reason
 
-      def initialize(status, rollback_reason = nil)
-        @status = status
+      def initialize(completed, rollback_reason = nil)
+        @completed = completed
         @rollback_reason = rollback_reason
 
         freeze
       end
 
       def completed?
-        @status == COMPLETED
+        @completed
       end
 
       def compensated?
-        @status == COMPENSATED
-      end
-
-      def failed?
-        @status == FAILED
+        !completed?
       end
     end
   end
