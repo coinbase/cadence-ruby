@@ -2,6 +2,7 @@ require 'securerandom'
 
 require 'cadence/execution_options'
 require 'cadence/errors'
+require 'cadence/fiber_with_parent_locals'
 require 'cadence/thread_local_context'
 require 'cadence/workflow/history/event_target'
 require 'cadence/workflow/decision'

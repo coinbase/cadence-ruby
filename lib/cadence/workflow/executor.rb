@@ -1,5 +1,4 @@
-require 'fiber'
-
+require 'cadence/fiber_with_parent_locals'
 require 'cadence/workflow/dispatcher'
 require 'cadence/workflow/state_manager'
 require 'cadence/workflow/context'

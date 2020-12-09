@@ -5,6 +5,7 @@ require 'cadence/execution_options'
 require 'cadence/metadata/activity'
 require 'cadence/workflow/future'
 require 'cadence/workflow/history/event_target'
+require 'cadence/fiber_with_parent_locals'
 
 module Cadence
   module Testing
