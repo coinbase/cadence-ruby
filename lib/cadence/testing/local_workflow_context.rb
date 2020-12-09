@@ -169,7 +169,7 @@ module Cadence
 
       def wait_for(future)
         # Point of communication
-        Fiber.yield while !future.finished?
+        FiberWithParentLocals.yield while !future.finished?
       end
 
       def now

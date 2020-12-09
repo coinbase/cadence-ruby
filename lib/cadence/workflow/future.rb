@@ -1,5 +1,3 @@
-require 'fiber'
-
 module Cadence
   class Workflow
     class Future
