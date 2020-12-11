@@ -2,6 +2,7 @@ require 'securerandom'
 
 require 'cadence/execution_options'
 require 'cadence/errors'
+require 'cadence/fiber_with_parent_locals'
 require 'cadence/thread_local_context'
 require 'cadence/workflow/history/event_target'
 require 'cadence/workflow/decision'
@@ -201,13 +202,13 @@ module Cadence
       end
 
       def wait_for(future)
-        fiber = Fiber.current
+        fiber = FiberWithParentLocals.current
 
         dispatcher.register_handler(future.target, Dispatcher::WILDCARD) do
           fiber.resume if future.finished?
         end
 
-        Fiber.yield
+        FiberWithParentLocals.yield
 
         return
       end
@@ -250,7 +251,7 @@ module Cadence
       end
 
       def call_in_fiber(block, *args)
-        Fiber.new do
+        FiberWithParentLocals.new do
           Cadence::ThreadLocalContext.set(self)
           block.call(*args)
         end.resume

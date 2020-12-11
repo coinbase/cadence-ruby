@@ -1,5 +1,4 @@
-require 'fiber'
-
+require 'cadence/fiber_with_parent_locals'
 require 'cadence/workflow/dispatcher'
 require 'cadence/workflow/state_manager'
 require 'cadence/workflow/context'
@@ -36,7 +35,7 @@ module Cadence
       def execute_workflow(input, metadata)
         context = Workflow::Context.new(state_manager, dispatcher, metadata)
 
-        Fiber.new do
+        FiberWithParentLocals.new do
           workflow_class.execute_in_context(context, input)
         end.resume
       end

@@ -1,4 +1,5 @@
 require 'cadence/testing/future_registry'
+require 'cadence/fiber_with_parent_locals'
 
 module Cadence
   module Testing
@@ -11,7 +12,7 @@ module Cadence
       end
 
       def run(&block)
-        @fiber = Fiber.new(&block)
+        @fiber = Cadence::FiberWithParentLocals.new(&block)
         resume
       end
 
