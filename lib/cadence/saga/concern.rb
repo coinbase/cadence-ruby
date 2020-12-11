@@ -14,7 +14,7 @@ module Cadence
         logger.error("Saga execution aborted: #{error.inspect}")
         logger.debug(error.backtrace.join("\n"))
 
-        if compensable?(error, configuration)
+        if compensate?(error, **configuration)
           logger.error('Saga compensating')
           saga.compensate
           Result.new(false, error)
@@ -24,11 +24,13 @@ module Cadence
         end
       end
 
-      def compensable?(error, compensable_errors: nil, non_compensable_errors: nil)
+      def compensate?(error, compensate_on: [], do_not_compensate_on: [])
         error_class = error.class
-        (compensable_errors.nil? && non_compensable_errors.nil?) ||
-          (compensable_errors&.include?(error_class) ||
-            non_compensable_errors && !non_compensable_errors.include?(error_class))
+        if compensate_on.any?
+          compensate_on.include?(error_class)
+        else
+          !do_not_compensate_on.include?(error_class)
+        end
       end
     end
   end

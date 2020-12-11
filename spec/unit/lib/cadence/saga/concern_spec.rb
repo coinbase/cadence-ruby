@@ -8,8 +8,8 @@ describe Cadence::Saga::Concern do
   class TestSagaConcernWorkflow < Cadence::Workflow
     include Cadence::Saga::Concern
 
-    def execute(non_compensable_errors: nil, compensable_errors: nil)
-      result = run_saga(non_compensable_errors: non_compensable_errors, compensable_errors: compensable_errors) do |saga|
+    def execute(do_not_compensate_on: [], compensate_on: [])
+      result = run_saga(do_not_compensate_on: do_not_compensate_on, compensate_on: compensate_on) do |saga|
         TestSagaConcernActivity1.execute!
         saga.add_compensation(TestSagaConcernActivity2, 42)
         TestSagaConcernActivity3.execute!
@@ -104,26 +104,26 @@ describe Cadence::Saga::Concern do
       end
     end
 
-    context 'non_compensable_errors' do
+    context 'do_not_compensate_on' do
       it 'raises error and does not perform compensation if error included' do
-        expect { subject.execute(non_compensable_errors: [TestSagaConcernError]) }.to raise_error(TestSagaConcernError)
+        expect { subject.execute(do_not_compensate_on: [TestSagaConcernError]) }.to raise_error(TestSagaConcernError)
         expect_saga_not_to_be_compensated
       end
 
       it 'raises error and does not perform compensation if error excluded' do
-        subject.execute(non_compensable_errors: [StandardError])
+        subject.execute(do_not_compensate_on: [StandardError])
         expect_saga_to_be_compensated
       end
     end
 
-    context 'compensable_errors' do
+    context 'compensate_on' do
       it 'compensates and does not raise error if error included' do
-        subject.execute(compensable_errors: [TestSagaConcernError])
+        subject.execute(compensate_on: [TestSagaConcernError])
         expect_saga_to_be_compensated
       end
 
       it 'raises error and does not compensate if error excluded' do
-        expect { subject.execute(compensable_errors: [StandardError]) }.to raise_error(TestSagaConcernError)
+        expect { subject.execute(compensate_on: [StandardError]) }.to raise_error(TestSagaConcernError)
         expect_saga_not_to_be_compensated
       end
     end
