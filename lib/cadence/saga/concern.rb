@@ -4,7 +4,7 @@ require 'cadence/saga/result'
 module Cadence
   module Saga
     module Concern
-      def run_saga(&block)
+      def run_saga(configuration = {}, &block)
         saga = Cadence::Saga::Saga.new(workflow)
 
         block.call(saga)
@@ -14,9 +14,23 @@ module Cadence
         logger.error("Saga execution aborted: #{error.inspect}")
         logger.debug(error.backtrace.join("\n"))
 
-        saga.compensate
+        if compensate?(error, **configuration)
+          logger.error('Saga compensating')
+          saga.compensate
+          Result.new(false, error)
+        else
+          logger.error('Saga not compensating')
+          raise error
+        end
+      end
 
-        Result.new(false, error)
+      def compensate?(error, compensate_on: [], do_not_compensate_on: [])
+        error_class = error.class
+        if compensate_on.any?
+          compensate_on.include?(error_class)
+        else
+          !do_not_compensate_on.include?(error_class)
+        end
       end
     end
   end
