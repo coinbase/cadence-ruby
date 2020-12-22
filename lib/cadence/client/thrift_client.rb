@@ -250,7 +250,8 @@ module Cadence
             runId: run_id
           ),
           reason: reason,
-          decisionFinishEventId: decision_task_event_id
+          decisionFinishEventId: decision_task_event_id,
+          requestId: SecureRandom.uuid
         )
         send_request('ResetWorkflowExecution', request)
       end
