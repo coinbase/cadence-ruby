@@ -97,13 +97,14 @@ module Cadence
         send_request('StartWorkflowExecution', request)
       end
 
-      def get_workflow_execution_history(domain:, workflow_id:, run_id:)
+      def get_workflow_execution_history(domain:, workflow_id:, run_id:, next_page_token: nil)
         request = CadenceThrift::GetWorkflowExecutionHistoryRequest.new(
           domain: domain,
           execution: CadenceThrift::WorkflowExecution.new(
             workflowId: workflow_id,
             runId: run_id
-          )
+          ),
+          nextPageToken: next_page_token
         )
 
         send_request('GetWorkflowExecutionHistory', request)
