@@ -11,4 +11,6 @@ Fabricator(:decision_task_thrift, from: CadenceThrift::PollForDecisionTaskRespon
   workflowExecution { Fabricate(:workflow_execution_thrift) }
   scheduledTimestamp { Cadence::Utils.time_to_nanos(Time.now) }
   startedTimestamp { Cadence::Utils.time_to_nanos(Time.now) }
+  history { Fabricate(:history_thrift) }
+  nextPageToken nil
 end
