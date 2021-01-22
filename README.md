@@ -125,13 +125,6 @@ connect to the Cadence service a simple proxy was created. You can run it using:
 
 The code and detailed instructions can be found [here](proxy/).
 
-### Thread-local variables
-
-Workflows are executed in a Fiber. Fibers created for executing the workflow will make a shallow copy of all the parent thread-local variables. If your code relies heavily on variables in Thread.current, the objects that are deeply nested could be modified. This should mainly affect tests.
-
-
-The code for Fibers can be found [here](lib/cadence/fiber_with_parent_locals.rb/).
-
 
 ## Workflows
 
