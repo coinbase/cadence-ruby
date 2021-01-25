@@ -9,7 +9,7 @@ module Cadence
     def self.new
       thread_locals = Thread.current.keys.map { |key| [key, Thread.current[key]] }
       super do
-        thread_locals.each { |(key, value)| Thread.current[key] = value.clone }
+        thread_locals.each { |(key, value)| Thread.current[key] = value }
         yield
       end
     end
