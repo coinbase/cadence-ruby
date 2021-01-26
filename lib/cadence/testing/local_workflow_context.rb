@@ -5,7 +5,6 @@ require 'cadence/execution_options'
 require 'cadence/metadata/activity'
 require 'cadence/workflow/future'
 require 'cadence/workflow/history/event_target'
-require 'cadence/fiber_with_parent_locals'
 
 module Cadence
   module Testing
@@ -170,7 +169,7 @@ module Cadence
 
       def wait_for(future)
         # Point of communication
-        FiberWithParentLocals.yield while !future.finished?
+        Fiber.yield while !future.finished?
       end
 
       def now
