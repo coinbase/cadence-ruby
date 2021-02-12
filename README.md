@@ -27,7 +27,7 @@ gem 'cadence-ruby', path: 'path/to/a/cloned/cadence-ruby/'
 Define an activity:
 
 ```ruby
-class HelloActivity < Cadence::Workflow
+class HelloActivity < Cadence::Activity
   def execute(name)
     puts "Hello #{name}!"
 
