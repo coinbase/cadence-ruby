@@ -131,7 +131,7 @@ module Cadence
 
         when 'ActivityTaskScheduled'
           state_machine.schedule
-          discard_decision(event.decision_id)
+          discard_decision(target)
 
         when 'ActivityTaskStarted'
           state_machine.start
@@ -151,7 +151,7 @@ module Cadence
 
         when 'ActivityTaskCancelRequested'
           state_machine.requested
-          discard_decision(event.decision_id)
+          discard_decision(target)
 
         when 'RequestCancelActivityTaskFailed'
           state_machine.fail
@@ -163,7 +163,7 @@ module Cadence
 
         when 'TimerStarted'
           state_machine.start
-          discard_decision(event.decision_id)
+          discard_decision(target)
 
         when 'TimerFired'
           state_machine.complete
@@ -207,7 +207,7 @@ module Cadence
 
         when 'StartChildWorkflowExecutionInitiated'
           state_machine.schedule
-          discard_decision(event.decision_id)
+          discard_decision(target)
 
         when 'StartChildWorkflowExecutionFailed'
           state_machine.fail
@@ -279,8 +279,18 @@ module Cadence
         dispatcher.dispatch(target, name, attributes)
       end
 
-      def discard_decision(decision_id)
-        decisions.delete_if { |(id, _)| id == decision_id }
+      def discard_decision(target)
+        # Pop the first decision from the list, it is expected to match
+        existing_decision_id, existing_decision = decisions.shift
+
+        if !existing_decision_id
+          raise NonDeterministicWorkflowError, "A decision #{target} was not scheduled upon replay"
+        end
+
+        existing_target = event_target_from(existing_decision_id, existing_decision)
+        if target != existing_target
+          raise NonDeterministicWorkflowError, "Unexpected decision #{existing_target} (expected #{target})"
+        end
       end
 
       def handle_marker(id, type, details)

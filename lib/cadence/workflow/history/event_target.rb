@@ -69,6 +69,10 @@ module Cadence
         def hash
           [id, type].hash
         end
+
+        def to_s
+          "#{type} (#{id})"
+        end
       end
     end
   end
