@@ -19,6 +19,7 @@ describe Cadence::Activity::Poller do
     allow(Cadence::ThreadPool).to receive(:new).and_return(thread_pool)
     allow(Cadence::Middleware::Chain).to receive(:new).and_return(middleware_chain)
     allow(client).to receive(:poll_for_activity_task).and_return(nil)
+    allow(Cadence.metrics).to receive(:timing)
   end
 
   describe '#start' do
@@ -33,6 +34,26 @@ describe Cadence::Activity::Poller do
       expect(client)
         .to have_received(:poll_for_activity_task)
         .with(domain: domain, task_list: task_list)
+        .twice
+    end
+
+    it 'polls for activity tasks' do
+      allow(subject).to receive(:shutting_down?).and_return(false, false, true)
+      allow(client).to receive(:poll_for_activity_task).and_return(nil)
+
+      subject.start
+
+      # stop poller before inspecting
+      subject.stop; subject.wait
+
+      expect(Cadence.metrics)
+        .to have_received(:timing)
+        .with(
+          'activity_poller.time_since_last_poll',
+          an_instance_of(Fixnum),
+          domain: domain,
+          task_list: task_list
+        )
         .twice
     end
 

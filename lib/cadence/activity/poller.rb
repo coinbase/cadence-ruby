@@ -47,14 +47,20 @@ module Cadence
       end
 
       def poll_loop
+        last_poll_time = Time.now
+        metrics_tags = { domain: domain, task_list: task_list }
+
         loop do
           thread_pool.wait_for_available_threads
 
           return if shutting_down?
 
+          time_diff_ms = ((Time.now - last_poll_time) * 1000).round
+          Cadence.metrics.timing('activity_poller.time_since_last_poll', time_diff_ms, metrics_tags)
           Cadence.logger.debug("Polling for activity tasks (#{domain} / #{task_list})")
 
           task = poll_for_task
+          last_poll_time = Time.now
           next unless task&.activityId
 
           thread_pool.schedule { process(task) }
