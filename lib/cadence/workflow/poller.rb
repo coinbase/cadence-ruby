@@ -45,10 +45,16 @@ module Cadence
       end
 
       def poll_loop
+        last_poll_time = Time.now
+        metrics_tags = { domain: domain, task_list: task_list }
+
         while !shutting_down? do
+          time_diff_ms = ((Time.now - last_poll_time) * 1000).round
+          Cadence.metrics.timing('workflow_poller.time_since_last_poll', time_diff_ms, metrics_tags)
           Cadence.logger.debug("Polling for decision tasks (#{domain} / #{task_list})")
 
           task = poll_for_task
+          last_poll_time = Time.now
           process(task) if task&.workflowType
         end
       end
