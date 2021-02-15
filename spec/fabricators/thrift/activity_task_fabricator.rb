@@ -17,4 +17,5 @@ Fabricator(:activity_task_thrift, from: CadenceThrift::PollForActivityTaskRespon
   scheduleToCloseTimeoutSeconds 15
   startToCloseTimeoutSeconds 25
   heartbeatTimeoutSeconds 5
+  attempt 1
 end

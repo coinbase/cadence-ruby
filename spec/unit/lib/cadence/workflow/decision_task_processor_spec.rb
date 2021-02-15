@@ -137,7 +137,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
         expect(Cadence.logger)
           .to have_received(:error)
-          .with("Decison task for TestWorkflow failed with: #<StandardError: Host unreachable>")
+          .with("Decision task for TestWorkflow failed with: #<StandardError: Host unreachable>")
       end
     end
   end
@@ -151,7 +151,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
         .with(
           task_token: task.taskToken,
           cause: CadenceThrift::DecisionTaskFailedCause::UNHANDLED_DECISION,
-          details: { message: 'Workflow does not exist' }
+          details: 'Workflow does not exist'
         )
     end
 
@@ -165,6 +165,18 @@ describe Cadence::Workflow::DecisionTaskProcessor do
       expect(Cadence.metrics)
         .to have_received(:timing)
         .with('decision_task.latency', an_instance_of(Integer), workflow: 'TestWorkflow')
+    end
+  end
+
+  context 'when decision task has reached max attempts' do
+    let(:task) { Fabricate(:decision_task_thrift, attempt: described_class::MAX_FAILED_ATTEMPTS) }
+
+    it 'does not notify Cadence' do
+      allow(executor).to receive(:run).and_raise(StandardError, 'Something went horribly wrong')
+
+      subject.process
+
+      expect(client).not_to have_received(:respond_decision_task_failed)
     end
   end
 end
