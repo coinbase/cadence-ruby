@@ -13,4 +13,5 @@ Fabricator(:decision_task_thrift, from: CadenceThrift::PollForDecisionTaskRespon
   startedTimestamp { Cadence::Utils.time_to_nanos(Time.now) }
   history { Fabricate(:history_thrift) }
   nextPageToken nil
+  attempt 1
 end
