@@ -29,7 +29,7 @@ module Cadence
           return
         end
 
-        history = Workflow::History.new(task.history.events)
+        history = fetch_full_history
         # TODO: For sticky workflows we need to cache the Executor instance
         executor = Workflow::Executor.new(workflow_class, history)
         metadata = Metadata.generate(Metadata::DECISION_TYPE, task, domain)
@@ -58,6 +58,25 @@ module Cadence
 
       def serialize_decisions(decisions)
         decisions.map { |(_, decision)| Workflow::Serializer.serialize(decision) }
+      end
+
+      def fetch_full_history
+        events = task.history.events.to_a
+        next_page_token = task.nextPageToken
+
+        while next_page_token do
+          response = client.get_workflow_execution_history(
+            domain: domain,
+            workflow_id: task.workflowExecution.workflowId,
+            run_id: task.workflowExecution.runId,
+            next_page_token: next_page_token
+          )
+
+          events += response.history.events.to_a
+          next_page_token = response.nextPageToken
+        end
+
+        Workflow::History.new(events)
       end
 
       def complete_task(decisions)
