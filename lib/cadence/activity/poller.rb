@@ -6,13 +6,16 @@ require 'cadence/activity/task_processor'
 module Cadence
   class Activity
     class Poller
-      THREAD_POOL_SIZE = 20
+      DEFAULT_OPTIONS = {
+        thread_pool_size: 20
+      }.freeze
 
-      def initialize(domain, task_list, activity_lookup, middleware = [])
+      def initialize(domain, task_list, activity_lookup, middleware = [], options = {})
         @domain = domain
         @task_list = task_list
         @activity_lookup = activity_lookup
         @middleware = middleware
+        @options = DEFAULT_OPTIONS.merge(options)
         @shutting_down = false
       end
 
@@ -33,10 +36,10 @@ module Cadence
 
       private
 
-      attr_reader :domain, :task_list, :activity_lookup, :middleware, :thread
+      attr_reader :domain, :task_list, :activity_lookup, :middleware, :options, :thread
 
       def client
-        @client ||= Cadence::Client.generate
+        @client ||= Cadence::Client.generate(options)
       end
 
       def shutting_down?
@@ -73,7 +76,7 @@ module Cadence
       end
 
       def thread_pool
-        @thread_pool ||= ThreadPool.new(THREAD_POOL_SIZE)
+        @thread_pool ||= ThreadPool.new(options[:thread_pool_size])
       end
     end
   end

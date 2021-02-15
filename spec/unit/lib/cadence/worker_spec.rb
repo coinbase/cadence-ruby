@@ -134,22 +134,22 @@ describe Cadence::Worker do
 
       allow(Cadence::Workflow::Poller)
         .to receive(:new)
-        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [])
+        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [], {})
         .and_return(workflow_poller_1)
 
       allow(Cadence::Workflow::Poller)
         .to receive(:new)
-        .with('other-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [])
+        .with('other-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [], {})
         .and_return(workflow_poller_2)
 
       allow(Cadence::Activity::Poller)
         .to receive(:new)
-        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [])
+        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [], {})
         .and_return(activity_poller_1)
 
       allow(Cadence::Activity::Poller)
         .to receive(:new)
-        .with('default-domain', 'other-task-list', an_instance_of(Cadence::ExecutableLookup), [])
+        .with('default-domain', 'other-task-list', an_instance_of(Cadence::ExecutableLookup), [], {})
         .and_return(activity_poller_2)
 
       subject.register_workflow(TestWorkerWorkflow)
@@ -163,6 +163,31 @@ describe Cadence::Worker do
       expect(workflow_poller_2).to have_received(:start)
       expect(activity_poller_1).to have_received(:start)
       expect(activity_poller_2).to have_received(:start)
+    end
+
+    context 'with options' do
+      subject { described_class.new(options) }
+      let(:options) { { polling_ttl: 42, thread_pool_size: 42 } }
+
+      before do
+        allow(Cadence::Workflow::Poller).to receive(:new).and_return(workflow_poller_1)
+        allow(subject).to receive(:shutting_down?).and_return(true)
+        subject.register_workflow(TestWorkerWorkflow)
+      end
+
+      it 'passes options to pollers' do
+        subject.start
+
+        expect(Cadence::Workflow::Poller)
+          .to have_received(:new)
+          .with(
+            'default-domain',
+            'default-task-list',
+            an_instance_of(Cadence::ExecutableLookup),
+            [],
+            options
+          )
+      end
     end
 
     context 'when middleware is configured' do
@@ -189,12 +214,12 @@ describe Cadence::Worker do
 
         allow(Cadence::Workflow::Poller)
           .to receive(:new)
-          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [entry_1])
+          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [entry_1], {})
           .and_return(workflow_poller_1)
 
         allow(Cadence::Activity::Poller)
           .to receive(:new)
-          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [entry_2])
+          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [entry_2], {})
           .and_return(activity_poller_1)
 
         subject.register_workflow(TestWorkerWorkflow)
