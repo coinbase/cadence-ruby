@@ -261,8 +261,18 @@ module Cadence
         send_request('ResetWorkflowExecution', request)
       end
 
-      def terminate_workflow_execution
-        raise NotImplementedError
+      def terminate_workflow_execution(domain:, workflow_id:, run_id:, reason:, details: nil)
+        request = CadenceThrift::TerminateWorkflowExecutionRequest.new(
+          domain: domain,
+          workflowExecution: CadenceThrift::WorkflowExecution.new(
+            workflowId: workflow_id,
+            runId: run_id
+          ),
+          reason: reason,
+          details: JSON.serialize(details),
+          identity: identity
+        )
+        send_request('TerminateWorkflowExecution', request)
       end
 
       def list_open_workflow_executions
