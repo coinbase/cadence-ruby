@@ -167,4 +167,16 @@ describe Cadence::Workflow::DecisionTaskProcessor do
         .with('decision_task.latency', an_instance_of(Integer), workflow: 'TestWorkflow')
     end
   end
+
+  context 'when decision task has reached max attempts' do
+    let(:task) { Fabricate(:decision_task_thrift, attempt: described_class::MAX_FAILED_ATTEMPTS) }
+
+    it 'does not notify Cadence' do
+      allow(executor).to receive(:run).and_raise(StandardError, 'Something went horribly wrong')
+
+      subject.process
+
+      expect(client).not_to have_received(:respond_decision_task_failed)
+    end
+  end
 end

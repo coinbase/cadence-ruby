@@ -6,7 +6,7 @@ require 'cadence/metadata'
 module Cadence
   class Workflow
     class DecisionTaskProcessor
-      MAX_FAILED_ATTEMPTS = 10
+      MAX_FAILED_ATTEMPTS = 50
 
       def initialize(task, domain, workflow_lookup, client, middleware_chain)
         @task = task
