@@ -46,7 +46,7 @@ module Cadence
 
       def poll_loop
         last_poll_time = Time.now
-        metrics_tags = { domain: domain, task_list: task_list }
+        metrics_tags = { domain: domain, task_list: task_list }.freeze
 
         while !shutting_down? do
           time_diff_ms = ((Time.now - last_poll_time) * 1000).round

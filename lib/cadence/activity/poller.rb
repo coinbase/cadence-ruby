@@ -48,7 +48,7 @@ module Cadence
 
       def poll_loop
         last_poll_time = Time.now
-        metrics_tags = { domain: domain, task_list: task_list }
+        metrics_tags = { domain: domain, task_list: task_list }.freeze
 
         loop do
           thread_pool.wait_for_available_threads
