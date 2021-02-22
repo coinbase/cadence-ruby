@@ -6,6 +6,9 @@ describe Cadence::Workflow::Poller do
   let(:domain) { 'test-domain' }
   let(:task_list) { 'test-task-list' }
   let(:lookup) { instance_double('Cadence::ExecutableLookup') }
+  let(:thread_pool) do
+    instance_double(Cadence::ThreadPool, wait_for_available_threads: nil, shutdown: nil)
+  end
   let(:middleware_chain) { instance_double(Cadence::Middleware::Chain) }
   let(:middleware) { [] }
 
@@ -13,14 +16,15 @@ describe Cadence::Workflow::Poller do
 
   before do
     allow(Cadence::Client).to receive(:generate).and_return(client)
+    allow(Cadence::ThreadPool).to receive(:new).and_return(thread_pool)
     allow(Cadence::Middleware::Chain).to receive(:new).and_return(middleware_chain)
+    allow(client).to receive(:poll_for_decision_task).and_return(nil)
     allow(Cadence.metrics).to receive(:timing)
   end
 
   describe '#start' do
     it 'polls for decision tasks' do
       allow(subject).to receive(:shutting_down?).and_return(false, false, true)
-      allow(client).to receive(:poll_for_decision_task).and_return(nil)
 
       subject.start
 
@@ -35,7 +39,6 @@ describe Cadence::Workflow::Poller do
 
     it 'polls for decision tasks' do
       allow(subject).to receive(:shutting_down?).and_return(false, false, true)
-      allow(client).to receive(:poll_for_decision_task).and_return(nil)
 
       subject.start
 
@@ -53,6 +56,33 @@ describe Cadence::Workflow::Poller do
         .twice
     end
 
+    context 'with options passed' do
+      subject { described_class.new(domain, task_list, lookup, middleware, options) }
+      let(:options) { { polling_ttl: 42, thread_pool_size: 42 } }
+
+      before do
+        allow(subject).to receive(:shutting_down?).and_return(false, true)
+      end
+
+      it 'passes options to the client' do
+        subject.start
+
+        # stop poller before inspecting
+        subject.stop; subject.wait
+
+        expect(Cadence::Client).to have_received(:generate).with(options)
+      end
+
+      it 'creates thread pool of a specified size' do
+        subject.start
+
+        # stop poller before inspecting
+        subject.stop; subject.wait
+
+        expect(Cadence::ThreadPool).to have_received(:new).with(42)
+      end
+    end
+
     context 'when an decision task is received' do
       let(:task_processor) do
         instance_double(Cadence::Workflow::DecisionTaskProcessor, process: nil)
@@ -63,6 +93,16 @@ describe Cadence::Workflow::Poller do
         allow(subject).to receive(:shutting_down?).and_return(false, true)
         allow(client).to receive(:poll_for_decision_task).and_return(task)
         allow(Cadence::Workflow::DecisionTaskProcessor).to receive(:new).and_return(task_processor)
+        allow(thread_pool).to receive(:schedule).and_yield
+      end
+
+      it 'schedules task processing using a ThreadPool' do
+        subject.start
+
+        # stop poller before inspecting
+        subject.stop; subject.wait
+
+        expect(thread_pool).to have_received(:schedule)
       end
 
       it 'uses DecisionTaskProcessor to process tasks' do
@@ -119,6 +159,19 @@ describe Cadence::Workflow::Poller do
           .to have_received(:error)
           .with('Unable to poll for a decision task: #<StandardError: StandardError>')
       end
+    end
+  end
+
+  describe '#wait' do
+    before do
+      subject.start
+      subject.stop
+    end
+
+    it 'shuts down the thread poll' do
+      subject.wait
+
+      expect(thread_pool).to have_received(:shutdown)
     end
   end
 end

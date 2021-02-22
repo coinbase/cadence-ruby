@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.1
+- Add thread pool support to workflow pollers
+
 ## 0.1.0
 - Add basic non-determinism check for workflow replay
 - Make worker thread count & poller TTL configurable

@@ -39,7 +39,6 @@ describe Cadence::Activity::Poller do
 
     it 'polls for activity tasks' do
       allow(subject).to receive(:shutting_down?).and_return(false, false, true)
-      allow(client).to receive(:poll_for_activity_task).and_return(nil)
 
       subject.start
 
