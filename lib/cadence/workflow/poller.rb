@@ -1,16 +1,21 @@
 require 'cadence/client'
+require 'cadence/thread_pool'
 require 'cadence/middleware/chain'
 require 'cadence/workflow/decision_task_processor'
 
 module Cadence
   class Workflow
     class Poller
+      DEFAULT_OPTIONS = {
+        thread_pool_size: 1
+      }.freeze
+
       def initialize(domain, task_list, workflow_lookup, middleware = [], options = {})
         @domain = domain
         @task_list = task_list
         @workflow_lookup = workflow_lookup
         @middleware = middleware
-        @options = options
+        @options = DEFAULT_OPTIONS.merge(options)
         @shutting_down = false
       end
 
@@ -26,6 +31,7 @@ module Cadence
 
       def wait
         @thread.join
+        thread_pool.shutdown
       end
 
       private
@@ -36,10 +42,6 @@ module Cadence
         @client ||= Cadence::Client.generate(options)
       end
 
-      def middleware_chain
-        @middleware_chain ||= Middleware::Chain.new(middleware)
-      end
-
       def shutting_down?
         @shutting_down
       end
@@ -48,14 +50,20 @@ module Cadence
         last_poll_time = Time.now
         metrics_tags = { domain: domain, task_list: task_list }.freeze
 
-        while !shutting_down? do
+        loop do
+          thread_pool.wait_for_available_threads
+
+          return if shutting_down?
+
           time_diff_ms = ((Time.now - last_poll_time) * 1000).round
           Cadence.metrics.timing('workflow_poller.time_since_last_poll', time_diff_ms, metrics_tags)
           Cadence.logger.debug("Polling for decision tasks (#{domain} / #{task_list})")
 
           task = poll_for_task
           last_poll_time = Time.now
-          process(task) if task&.workflowType
+          next unless task&.workflowType
+
+          thread_pool.schedule { process(task) }
         end
       end
 
@@ -67,7 +75,14 @@ module Cadence
       end
 
       def process(task)
+        client = Cadence::Client.generate
+        middleware_chain = Middleware::Chain.new(middleware)
+
         DecisionTaskProcessor.new(task, domain, workflow_lookup, client, middleware_chain).process
+      end
+
+      def thread_pool
+        @thread_pool ||= ThreadPool.new(options[:thread_pool_size])
       end
     end
   end
