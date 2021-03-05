@@ -8,13 +8,13 @@ module Cadence
     class DecisionTaskProcessor
       MAX_FAILED_ATTEMPTS = 50
 
-      def initialize(task, domain, workflow_lookup, client, middleware_chain)
+      def initialize(task, domain, workflow_lookup, connection, middleware_chain)
         @task = task
         @domain = domain
         @task_token = task.taskToken
         @workflow_name = task.workflowType.name
         @workflow_class = workflow_lookup.find(workflow_name)
-        @client = client
+        @connection = connection
         @middleware_chain = middleware_chain
       end
 
@@ -50,7 +50,7 @@ module Cadence
 
       private
 
-      attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class, :client, :middleware_chain
+      attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class, :connection, :middleware_chain
 
       def queue_time_ms
         ((task.startedTimestamp - task.scheduledTimestamp) / 1_000_000).round
@@ -65,7 +65,7 @@ module Cadence
         next_page_token = task.nextPageToken
 
         while next_page_token do
-          response = client.get_workflow_execution_history(
+          response = connection.get_workflow_execution_history(
             domain: domain,
             workflow_id: task.workflowExecution.workflowId,
             run_id: task.workflowExecution.runId,
@@ -82,7 +82,7 @@ module Cadence
       def complete_task(decisions)
         Cadence.logger.info("Decision task for #{workflow_name} completed")
 
-        client.respond_decision_task_completed(
+        connection.respond_decision_task_completed(
           task_token: task_token,
           decisions: serialize_decisions(decisions)
         )
@@ -94,7 +94,7 @@ module Cadence
         # Stop from getting into infinite loop if the error persists
         return if task.attempt >= MAX_FAILED_ATTEMPTS
 
-        client.respond_decision_task_failed(
+        connection.respond_decision_task_failed(
           task_token: task_token,
           cause: CadenceThrift::DecisionTaskFailedCause::UNHANDLED_DECISION,
           details: message

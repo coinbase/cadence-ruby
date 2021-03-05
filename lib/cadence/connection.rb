@@ -1,13 +1,13 @@
-require 'cadence/client/thrift_client'
+require 'cadence/connection/thrift'
 
 module Cadence
-  module Client
+  module Connection
     CLIENT_TYPES_MAP = {
-      thrift: Cadence::Client::ThriftClient
+      thrift: Cadence::Connection::Thrift
     }.freeze
 
     def self.generate(options = {})
-      client_class = CLIENT_TYPES_MAP[Cadence.configuration.client_type]
+      connection_class = CLIENT_TYPES_MAP[Cadence.configuration.connection_type]
       host = Cadence.configuration.host
       port = Cadence.configuration.port
 
@@ -15,7 +15,7 @@ module Cadence
       thread_id = Thread.current.object_id
       identity = "#{thread_id}@#{hostname}"
 
-      client_class.new(host, port, identity, options)
+      connection_class.new(host, port, identity, options)
     end
   end
 end

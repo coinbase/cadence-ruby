@@ -11,18 +11,18 @@ describe Cadence::Testing::CadenceOverride do
 
   context 'when testing mode is disabled' do
     describe 'Cadence.start_workflow' do
-      let(:client) { instance_double('Cadence::Client::ThriftClient') }
+      let(:connection) { instance_double('Cadence::Connection::Thrift') }
       let(:response) { CadenceThrift::StartWorkflowExecutionResponse.new(runId: 'xxx') }
 
-      before { allow(Cadence::Client).to receive(:generate).and_return(client) }
-      after { Cadence.remove_instance_variable(:@client) }
+      before { allow(Cadence::Connection).to receive(:generate).and_return(connection) }
+      after { Cadence.remove_instance_variable(:@connection) }
 
       it 'invokes original implementation' do
-        allow(client).to receive(:start_workflow_execution).and_return(response)
+        allow(connection).to receive(:start_workflow_execution).and_return(response)
 
         Cadence.start_workflow(TestCadenceOverrideWorkflow)
 
-        expect(client)
+        expect(connection)
           .to have_received(:start_workflow_execution)
           .with(hash_including(workflow_name: 'TestCadenceOverrideWorkflow'))
       end

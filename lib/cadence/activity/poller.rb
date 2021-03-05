@@ -1,4 +1,4 @@
-require 'cadence/client'
+require 'cadence/connection'
 require 'cadence/thread_pool'
 require 'cadence/middleware/chain'
 require 'cadence/activity/task_processor'
@@ -38,8 +38,8 @@ module Cadence
 
       attr_reader :domain, :task_list, :activity_lookup, :middleware, :options, :thread
 
-      def client
-        @client ||= Cadence::Client.generate(options)
+      def connection
+        @connection ||= Cadence::Connection.generate(options)
       end
 
       def shutting_down?
@@ -68,17 +68,17 @@ module Cadence
       end
 
       def poll_for_task
-        client.poll_for_activity_task(domain: domain, task_list: task_list)
+        connection.poll_for_activity_task(domain: domain, task_list: task_list)
       rescue StandardError => error
         Cadence.logger.error("Unable to poll for an activity task: #{error.inspect}")
         nil
       end
 
       def process(task)
-        client = Cadence::Client.generate
+        connection = Cadence::Connection.generate
         middleware_chain = Middleware::Chain.new(middleware)
 
-        TaskProcessor.new(task, domain, activity_lookup, client, middleware_chain).process
+        TaskProcessor.new(task, domain, activity_lookup, connection, middleware_chain).process
       end
 
       def thread_pool

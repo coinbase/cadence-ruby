@@ -1,4 +1,4 @@
-require 'cadence/client'
+require 'cadence/connection'
 require 'cadence/workflow/poller'
 require 'cadence/activity/poller'
 require 'cadence/execution_options'

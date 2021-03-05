@@ -2,7 +2,7 @@ require 'cadence/activity/task_processor'
 require 'cadence/middleware/chain'
 
 describe Cadence::Activity::TaskProcessor do
-  subject { described_class.new(task, domain, lookup, client, middleware_chain) }
+  subject { described_class.new(task, domain, lookup, connection, middleware_chain) }
 
   let(:domain) { 'test-domain' }
   let(:lookup) { instance_double('Cadence::ExecutableLookup', find: nil) }
@@ -11,7 +11,7 @@ describe Cadence::Activity::TaskProcessor do
   end
   let(:metadata) { Cadence::Metadata.generate(Cadence::Metadata::ACTIVITY_TYPE, task) }
   let(:activity_name) { 'TestActivity' }
-  let(:client) { instance_double('Cadence::Client::ThriftClient') }
+  let(:connection) { instance_double('Cadence::Connection::Thrift') }
   let(:middleware_chain) { Cadence::Middleware::Chain.new }
   let(:input) { ['arg1', 'arg2'] }
 
@@ -23,10 +23,10 @@ describe Cadence::Activity::TaskProcessor do
         .to receive(:generate)
         .with(Cadence::Metadata::ACTIVITY_TYPE, task, domain)
         .and_return(metadata)
-      allow(Cadence::Activity::Context).to receive(:new).with(client, metadata).and_return(context)
+      allow(Cadence::Activity::Context).to receive(:new).with(connection, metadata).and_return(context)
 
-      allow(client).to receive(:respond_activity_task_completed)
-      allow(client).to receive(:respond_activity_task_failed)
+      allow(connection).to receive(:respond_activity_task_completed)
+      allow(connection).to receive(:respond_activity_task_failed)
 
       allow(middleware_chain).to receive(:invoke).and_call_original
 
@@ -37,7 +37,7 @@ describe Cadence::Activity::TaskProcessor do
       it 'fails the activity task' do
         subject.process
 
-        expect(client)
+        expect(connection)
           .to have_received(:respond_activity_task_failed)
           .with(
             task_token: task.taskToken,
@@ -46,8 +46,8 @@ describe Cadence::Activity::TaskProcessor do
           )
       end
 
-      it 'ignores client exception' do
-        allow(client)
+      it 'ignores connection exception' do
+        allow(connection)
           .to receive(:respond_activity_task_failed)
           .and_raise(StandardError)
 
@@ -80,13 +80,13 @@ describe Cadence::Activity::TaskProcessor do
         it 'completes the activity task' do
           subject.process
 
-          expect(client)
+          expect(connection)
             .to have_received(:respond_activity_task_completed)
             .with(task_token: task.taskToken, result: 'result')
         end
 
-        it 'ignores client exception' do
-          allow(client)
+        it 'ignores connection exception' do
+          allow(connection)
             .to receive(:respond_activity_task_completed)
             .and_raise(StandardError)
 
@@ -115,7 +115,7 @@ describe Cadence::Activity::TaskProcessor do
           it 'does not complete the activity task' do
             subject.process
 
-            expect(client).not_to have_received(:respond_activity_task_completed)
+            expect(connection).not_to have_received(:respond_activity_task_completed)
           end
         end
       end
@@ -140,7 +140,7 @@ describe Cadence::Activity::TaskProcessor do
         it 'fails the activity task' do
           subject.process
 
-          expect(client)
+          expect(connection)
             .to have_received(:respond_activity_task_failed)
             .with(
               task_token: task.taskToken,
@@ -149,8 +149,8 @@ describe Cadence::Activity::TaskProcessor do
             )
         end
 
-        it 'ignores client exception' do
-          allow(client)
+        it 'ignores connection exception' do
+          allow(connection)
             .to receive(:respond_activity_task_failed)
             .and_raise(StandardError)
 
@@ -179,7 +179,7 @@ describe Cadence::Activity::TaskProcessor do
           it 'fails the activity task' do
             subject.process
 
-            expect(client)
+            expect(connection)
               .to have_received(:respond_activity_task_failed)
               .with(
                 task_token: task.taskToken,
@@ -195,7 +195,7 @@ describe Cadence::Activity::TaskProcessor do
           it 'does not handle the exception' do
             expect { subject.process }.to raise_error(exception)
 
-            expect(client).not_to have_received(:respond_activity_task_failed)
+            expect(connection).not_to have_received(:respond_activity_task_failed)
           end
         end
 
@@ -205,7 +205,7 @@ describe Cadence::Activity::TaskProcessor do
           it 'fails the activity task' do
             subject.process
 
-            expect(client)
+            expect(connection)
               .to have_received(:respond_activity_task_failed)
               .with(task_token: task.taskToken, reason: 'StandardError', details: 'activity failed')
           end

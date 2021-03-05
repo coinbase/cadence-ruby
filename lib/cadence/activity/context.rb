@@ -7,8 +7,8 @@ require 'cadence/activity/async_token'
 module Cadence
   class Activity
     class Context
-      def initialize(client, metadata)
-        @client = client
+      def initialize(connection, metadata)
+        @connection = connection
         @metadata = metadata
         @async = false
       end
@@ -32,7 +32,7 @@ module Cadence
 
       def heartbeat(details = nil)
         logger.debug('Activity heartbeat')
-        client.record_activity_task_heartbeat(task_token: task_token, details: details)
+        connection.record_activity_task_heartbeat(task_token: task_token, details: details)
       end
 
       def logger
@@ -54,7 +54,7 @@ module Cadence
 
       private
 
-      attr_reader :client, :metadata
+      attr_reader :connection, :metadata
 
       def task_token
         metadata.task_token
