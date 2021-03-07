@@ -3,11 +3,12 @@ require 'cadence/workflow'
 require 'cadence/executable_lookup'
 require 'cadence/connection/thrift'
 require 'cadence/middleware/chain'
+require 'cadence/configuration'
 
 describe Cadence::Workflow::DecisionTaskProcessor do
   class TestWorkflow < Cadence::Workflow; end
 
-  subject { described_class.new(task, domain, lookup, connection, middleware_chain) }
+  subject { described_class.new(task, domain, lookup, connection, middleware_chain, config) }
 
   let(:task) { Fabricate(:decision_task_thrift) }
   let(:domain) { 'test-domain' }
@@ -21,6 +22,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
   end
   let(:middleware_chain) { Cadence::Middleware::Chain.new }
   let(:executor) { instance_double(Cadence::Workflow::Executor, run: []) }
+  let(:config) { Cadence::Configuration.new }
 
   before do
     allow(Cadence.metrics).to receive(:timing)
@@ -35,7 +37,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
       allow(Cadence::Workflow::Executor)
         .to receive(:new)
-        .with(TestWorkflow, an_instance_of(Cadence::Workflow::History))
+        .with(TestWorkflow, an_instance_of(Cadence::Workflow::History), config)
         .and_return(executor)
     end
 

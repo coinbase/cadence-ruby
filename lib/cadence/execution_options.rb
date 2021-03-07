@@ -4,7 +4,7 @@ module Cadence
   class ExecutionOptions
     attr_reader :name, :domain, :task_list, :retry_policy, :timeouts, :headers
 
-    def initialize(object, options = {})
+    def initialize(object, options, defaults = nil)
       @name = options[:name] || object.to_s
       @domain = options[:domain]
       @task_list = options[:task_list]
@@ -21,10 +21,12 @@ module Cadence
         @headers = object.headers.merge(@headers) if object.headers
       end
 
-      @domain ||= Cadence.configuration.domain
-      @task_list ||= Cadence.configuration.task_list
-      @timeouts = Cadence.configuration.timeouts.merge(@timeouts)
-      @headers = Cadence.configuration.headers.merge(@headers)
+      if defaults
+        @domain ||= defaults.domain
+        @task_list ||= defaults.task_list
+        @timeouts = defaults.timeouts.merge(@timeouts)
+        @headers = defaults.headers.merge(@headers)
+      end
 
       freeze
     end

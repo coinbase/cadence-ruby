@@ -3,6 +3,9 @@ require 'cadence/metrics_adapters/null'
 
 module Cadence
   class Configuration
+    Connection = Struct.new(:type, :host, :port, keyword_init: true)
+    Execution = Struct.new(:domain, :task_list, :timeouts, :headers, keyword_init: true)
+
     attr_reader :timeouts
     attr_accessor :connection_type, :host, :port, :logger, :metrics_adapter, :domain, :task_list, :headers
 
@@ -31,6 +34,23 @@ module Cadence
 
     def timeouts=(new_timeouts)
       @timeouts = DEFAULT_TIMEOUTS.merge(new_timeouts)
+    end
+
+    def for_connection
+      Connection.new(
+        type: connection_type,
+        host: host,
+        port: port
+      ).freeze
+    end
+
+    def for_execution
+      Execution.new(
+        domain: domain,
+        task_list: task_list,
+        timeouts: timeouts,
+        headers: headers
+      ).freeze
     end
   end
 end

@@ -8,7 +8,7 @@ module Cadence
     class DecisionTaskProcessor
       MAX_FAILED_ATTEMPTS = 50
 
-      def initialize(task, domain, workflow_lookup, connection, middleware_chain)
+      def initialize(task, domain, workflow_lookup, connection, middleware_chain, config)
         @task = task
         @domain = domain
         @task_token = task.taskToken
@@ -16,6 +16,7 @@ module Cadence
         @workflow_class = workflow_lookup.find(workflow_name)
         @connection = connection
         @middleware_chain = middleware_chain
+        @config = config
       end
 
       def process
@@ -31,7 +32,7 @@ module Cadence
 
         history = fetch_full_history
         # TODO: For sticky workflows we need to cache the Executor instance
-        executor = Workflow::Executor.new(workflow_class, history)
+        executor = Workflow::Executor.new(workflow_class, history, config)
         metadata = Metadata.generate(Metadata::DECISION_TYPE, task, domain)
 
         decisions = middleware_chain.invoke(metadata) do
@@ -50,7 +51,8 @@ module Cadence
 
       private
 
-      attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class, :connection, :middleware_chain
+      attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class, :connection,
+        :middleware_chain, :config
 
       def queue_time_ms
         ((task.startedTimestamp - task.scheduledTimestamp) / 1_000_000).round

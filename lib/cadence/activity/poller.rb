@@ -10,10 +10,11 @@ module Cadence
         thread_pool_size: 20
       }.freeze
 
-      def initialize(domain, task_list, activity_lookup, middleware = [], options = {})
+      def initialize(domain, task_list, activity_lookup, config, middleware = [], options = {})
         @domain = domain
         @task_list = task_list
         @activity_lookup = activity_lookup
+        @config = config
         @middleware = middleware
         @options = DEFAULT_OPTIONS.merge(options)
         @shutting_down = false
@@ -36,10 +37,10 @@ module Cadence
 
       private
 
-      attr_reader :domain, :task_list, :activity_lookup, :middleware, :options, :thread
+      attr_reader :domain, :task_list, :activity_lookup, :config, :middleware, :options, :thread
 
       def connection
-        @connection ||= Cadence::Connection.generate(options)
+        @connection ||= Cadence::Connection.generate(config.for_connection, options)
       end
 
       def shutting_down?
@@ -75,7 +76,7 @@ module Cadence
       end
 
       def process(task)
-        connection = Cadence::Connection.generate
+        connection = Cadence::Connection.generate(config.for_connection)
         middleware_chain = Middleware::Chain.new(middleware)
 
         TaskProcessor.new(task, domain, activity_lookup, connection, middleware_chain).process

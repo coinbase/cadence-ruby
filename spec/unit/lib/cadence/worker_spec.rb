@@ -1,8 +1,12 @@
 require 'cadence/worker'
 require 'cadence/workflow'
 require 'cadence/activity'
+require 'cadence/configuration'
 
 describe Cadence::Worker do
+  subject { described_class.new(config) }
+  let(:config) { Cadence::Configuration.new }
+
   class TestWorkerWorkflow < Cadence::Workflow
     domain 'default-domain'
     task_list 'default-task-list'
@@ -134,22 +138,22 @@ describe Cadence::Worker do
 
       allow(Cadence::Workflow::Poller)
         .to receive(:new)
-        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [], {})
+        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [], {})
         .and_return(workflow_poller_1)
 
       allow(Cadence::Workflow::Poller)
         .to receive(:new)
-        .with('other-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [], {})
+        .with('other-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [], {})
         .and_return(workflow_poller_2)
 
       allow(Cadence::Activity::Poller)
         .to receive(:new)
-        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [], {})
+        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [], {})
         .and_return(activity_poller_1)
 
       allow(Cadence::Activity::Poller)
         .to receive(:new)
-        .with('default-domain', 'other-task-list', an_instance_of(Cadence::ExecutableLookup), [], {})
+        .with('default-domain', 'other-task-list', an_instance_of(Cadence::ExecutableLookup), config, [], {})
         .and_return(activity_poller_2)
 
       subject.register_workflow(TestWorkerWorkflow)
@@ -166,7 +170,7 @@ describe Cadence::Worker do
     end
 
     context 'with options' do
-      subject { described_class.new(options) }
+      subject { described_class.new(config, options) }
       let(:options) { { polling_ttl: 42, thread_pool_size: 42 } }
 
       before do
@@ -184,6 +188,7 @@ describe Cadence::Worker do
             'default-domain',
             'default-task-list',
             an_instance_of(Cadence::ExecutableLookup),
+            config,
             [],
             options
           )
@@ -214,12 +219,12 @@ describe Cadence::Worker do
 
         allow(Cadence::Workflow::Poller)
           .to receive(:new)
-          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [entry_1], {})
+          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [entry_1], {})
           .and_return(workflow_poller_1)
 
         allow(Cadence::Activity::Poller)
           .to receive(:new)
-          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), [entry_2], {})
+          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [entry_2], {})
           .and_return(activity_poller_1)
 
         subject.register_workflow(TestWorkerWorkflow)

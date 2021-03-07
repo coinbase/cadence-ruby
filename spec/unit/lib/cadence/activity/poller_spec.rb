@@ -1,5 +1,6 @@
 require 'cadence/activity/poller'
 require 'cadence/middleware/entry'
+require 'cadence/configuration'
 
 describe Cadence::Activity::Poller do
   let(:connection) { instance_double('Cadence::Connection::Thrift') }
@@ -9,10 +10,11 @@ describe Cadence::Activity::Poller do
   let(:thread_pool) do
     instance_double(Cadence::ThreadPool, wait_for_available_threads: nil, shutdown: nil)
   end
+  let(:config) { Cadence::Configuration.new }
   let(:middleware_chain) { instance_double(Cadence::Middleware::Chain) }
   let(:middleware) { [] }
 
-  subject { described_class.new(domain, task_list, lookup, middleware) }
+  subject { described_class.new(domain, task_list, lookup, config, middleware) }
 
   before do
     allow(Cadence::Connection).to receive(:generate).and_return(connection)
@@ -37,7 +39,7 @@ describe Cadence::Activity::Poller do
         .twice
     end
 
-    it 'polls for activity tasks' do
+    it 'measures time between polls' do
       allow(subject).to receive(:shutting_down?).and_return(false, false, true)
 
       subject.start
@@ -57,7 +59,7 @@ describe Cadence::Activity::Poller do
     end
 
     context 'with options passed' do
-      subject { described_class.new(domain, task_list, lookup, middleware, options) }
+      subject { described_class.new(domain, task_list, lookup, config, middleware, options) }
       let(:options) { { polling_ttl: 42, thread_pool_size: 42 } }
 
       before do
@@ -70,7 +72,9 @@ describe Cadence::Activity::Poller do
         # stop poller before inspecting
         subject.stop; subject.wait
 
-        expect(Cadence::Connection).to have_received(:generate).with(options)
+        expect(Cadence::Connection)
+          .to have_received(:generate)
+          .with(an_instance_of(Cadence::Configuration::Connection), options)
       end
 
       it 'creates thread pool of a specified size' do

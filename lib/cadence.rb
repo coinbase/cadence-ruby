@@ -15,7 +15,7 @@ module Cadence
       options = args.delete(:options) || {}
       input << args unless args.empty?
 
-      execution_options = ExecutionOptions.new(workflow, options)
+      execution_options = ExecutionOptions.new(workflow, options, config.for_execution)
       workflow_id = options[:workflow_id] || SecureRandom.uuid
 
       response = connection.start_workflow_execution(
@@ -37,7 +37,7 @@ module Cadence
       options = args.delete(:options) || {}
       input << args unless args.empty?
 
-      execution_options = ExecutionOptions.new(workflow, options)
+      execution_options = ExecutionOptions.new(workflow, options, config.for_execution)
       workflow_id = options[:workflow_id] || SecureRandom.uuid
 
       response = connection.start_workflow_execution(
@@ -133,19 +133,20 @@ module Cadence
     end
 
     def configure(&block)
-      yield configuration
+      yield config
     end
 
     def configuration
-      @configuration ||= Configuration.new
+      warn '[DEPRECATION] This method is now deprecated without a substitution'
+      config
     end
 
     def logger
-      configuration.logger
+      config.logger
     end
 
     def metrics
-      @metrics ||= Metrics.new(configuration.metrics_adapter)
+      @metrics ||= Metrics.new(config.metrics_adapter)
     end
 
     def get_workflow_history(domain:, workflow_id:, run_id:)
@@ -159,8 +160,12 @@ module Cadence
 
     private
 
+    def config
+      @config ||= Configuration.new
+    end
+
     def connection
-      @connection ||= Cadence::Connection.generate
+      @connection ||= Cadence::Connection.generate(config.for_connection)
     end
 
     def get_last_completed_decision_task(domain, workflow_id, run_id)
