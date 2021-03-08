@@ -74,7 +74,7 @@ describe Cadence::Activity::Poller do
 
         expect(Cadence::Connection)
           .to have_received(:generate)
-          .with(an_instance_of(Cadence::Configuration::Connection), options)
+          .with(config.for_connection, options)
       end
 
       it 'creates thread pool of a specified size' do
