@@ -15,7 +15,7 @@ module Cadence
       options = args.delete(:options) || {}
       input << args unless args.empty?
 
-      execution_options = ExecutionOptions.new(workflow, options, config.for_execution)
+      execution_options = ExecutionOptions.new(workflow, options, config.default_execution_options)
       workflow_id = options[:workflow_id] || SecureRandom.uuid
 
       response = connection.start_workflow_execution(
@@ -37,7 +37,7 @@ module Cadence
       options = args.delete(:options) || {}
       input << args unless args.empty?
 
-      execution_options = ExecutionOptions.new(workflow, options, config.for_execution)
+      execution_options = ExecutionOptions.new(workflow, options, config.default_execution_options)
       workflow_id = options[:workflow_id] || SecureRandom.uuid
 
       response = connection.start_workflow_execution(

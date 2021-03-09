@@ -44,7 +44,7 @@ module Cadence
       ).freeze
     end
 
-    def for_execution
+    def default_execution_options
       Execution.new(
         domain: domain,
         task_list: task_list,

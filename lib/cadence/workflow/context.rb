@@ -40,7 +40,7 @@ module Cadence
         options = args.delete(:options) || {}
         input << args unless args.empty?
 
-        execution_options = ExecutionOptions.new(activity_class, options, config.for_execution)
+        execution_options = ExecutionOptions.new(activity_class, options, config.default_execution_options)
 
         decision = Decision::ScheduleActivity.new(
           activity_id: options[:activity_id],
@@ -98,7 +98,7 @@ module Cadence
         options = args.delete(:options) || {}
         input << args unless args.empty?
 
-        execution_options = ExecutionOptions.new(workflow_class, options, config.for_execution)
+        execution_options = ExecutionOptions.new(workflow_class, options, config.default_execution_options)
 
         decision = Decision::StartChildWorkflow.new(
           workflow_id: options[:workflow_id] || SecureRandom.uuid,

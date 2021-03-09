@@ -18,14 +18,14 @@ module Cadence
     end
 
     def register_workflow(workflow_class, options = {})
-      execution_options = ExecutionOptions.new(workflow_class, options, config.for_execution)
+      execution_options = ExecutionOptions.new(workflow_class, options, config.default_execution_options)
       key = [execution_options.domain, execution_options.task_list]
 
       @workflows[key].add(execution_options.name, workflow_class)
     end
 
     def register_activity(activity_class, options = {})
-      execution_options = ExecutionOptions.new(activity_class, options, config.for_execution)
+      execution_options = ExecutionOptions.new(activity_class, options, config.default_execution_options)
       key = [execution_options.domain, execution_options.task_list]
 
       @activities[key].add(execution_options.name, activity_class)
