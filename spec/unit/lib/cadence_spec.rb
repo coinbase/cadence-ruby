@@ -7,13 +7,13 @@ describe Cadence do
     before { allow(Cadence::Client).to receive(:new).and_return(client) }
     after { described_class.remove_instance_variable(:@default_client) }
 
-    shared_examples 'a forwarded method' do |method, *args, **kwargs|
+    shared_examples 'a forwarded method' do |method, *args, kwargs|
       it 'forwards mehod call to the default client instance' do
         allow(client).to receive(method)
 
-        described_class.public_send(method, *args, **kwargs)
+        described_class.public_send(method, *args, kwargs)
 
-        expect(client).to have_received(method).with(*args, **kwargs)
+        expect(client).to have_received(method).with(*args, kwargs)
       end
     end
 
