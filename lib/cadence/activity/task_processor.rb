@@ -1,18 +1,19 @@
 require 'cadence/metadata'
 require 'cadence/activity/context'
 require 'cadence/json'
+require 'cadence/connection'
 
 module Cadence
   class Activity
     class TaskProcessor
-      def initialize(task, domain, activity_lookup, connection, middleware_chain)
+      def initialize(task, domain, activity_lookup, middleware_chain, config)
         @task = task
         @domain = domain
         @task_token = task.taskToken
         @activity_name = task.activityType.name
         @activity_class = activity_lookup.find(activity_name)
-        @connection = connection
         @middleware_chain = middleware_chain
+        @config = config
       end
 
       def process
@@ -49,7 +50,12 @@ module Cadence
 
       private
 
-      attr_reader :task, :domain, :task_token, :activity_name, :activity_class, :connection, :middleware_chain
+      attr_reader :task, :domain, :task_token, :activity_name, :activity_class,
+        :middleware_chain, :config
+
+      def connection
+        @connection ||= Cadence::Connection.generate(config.for_connection)
+      end
 
       def queue_time_ms
         ((task.startedTimestamp - task.scheduledTimestampOfThisAttempt) / 1_000_000).round

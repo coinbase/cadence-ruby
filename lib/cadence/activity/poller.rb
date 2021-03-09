@@ -76,10 +76,9 @@ module Cadence
       end
 
       def process(task)
-        connection = Cadence::Connection.generate(config.for_connection)
         middleware_chain = Middleware::Chain.new(middleware)
 
-        TaskProcessor.new(task, domain, activity_lookup, connection, middleware_chain).process
+        TaskProcessor.new(task, domain, activity_lookup, middleware_chain, config).process
       end
 
       def thread_pool

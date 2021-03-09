@@ -8,7 +8,7 @@ require 'cadence/configuration'
 describe Cadence::Workflow::DecisionTaskProcessor do
   class TestWorkflow < Cadence::Workflow; end
 
-  subject { described_class.new(task, domain, lookup, connection, middleware_chain, config) }
+  subject { described_class.new(task, domain, lookup, middleware_chain, config) }
 
   let(:task) { Fabricate(:decision_task_thrift) }
   let(:domain) { 'test-domain' }
@@ -25,6 +25,10 @@ describe Cadence::Workflow::DecisionTaskProcessor do
   let(:config) { Cadence::Configuration.new }
 
   before do
+    allow(Cadence::Connection)
+      .to receive(:generate)
+      .with(config.for_connection)
+      .and_return(connection)
     allow(Cadence.metrics).to receive(:timing)
     allow(Cadence.logger).to receive(:info)
     allow(Cadence.logger).to receive(:error)

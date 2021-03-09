@@ -8,13 +8,12 @@ module Cadence
     class DecisionTaskProcessor
       MAX_FAILED_ATTEMPTS = 50
 
-      def initialize(task, domain, workflow_lookup, connection, middleware_chain, config)
+      def initialize(task, domain, workflow_lookup, middleware_chain, config)
         @task = task
         @domain = domain
         @task_token = task.taskToken
         @workflow_name = task.workflowType.name
         @workflow_class = workflow_lookup.find(workflow_name)
-        @connection = connection
         @middleware_chain = middleware_chain
         @config = config
       end
@@ -51,8 +50,12 @@ module Cadence
 
       private
 
-      attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class, :connection,
+      attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class,
         :middleware_chain, :config
+
+      def connection
+        @connection ||= Cadence::Connection.generate(config.for_connection)
+      end
 
       def queue_time_ms
         ((task.startedTimestamp - task.scheduledTimestamp) / 1_000_000).round

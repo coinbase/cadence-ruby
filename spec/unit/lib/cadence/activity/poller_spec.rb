@@ -115,7 +115,7 @@ describe Cadence::Activity::Poller do
 
         expect(Cadence::Activity::TaskProcessor)
           .to have_received(:new)
-          .with(task, domain, lookup, connection, middleware_chain)
+          .with(task, domain, lookup, middleware_chain, config)
         expect(task_processor).to have_received(:process)
       end
 
@@ -138,7 +138,7 @@ describe Cadence::Activity::Poller do
           expect(Cadence::Middleware::Chain).to have_received(:new).with(middleware)
           expect(Cadence::Activity::TaskProcessor)
             .to have_received(:new)
-            .with(task, domain, lookup, connection, middleware_chain)
+            .with(task, domain, lookup, middleware_chain, config)
         end
       end
     end

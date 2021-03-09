@@ -1,8 +1,9 @@
 require 'cadence/activity/task_processor'
 require 'cadence/middleware/chain'
+require 'cadence/configuration'
 
 describe Cadence::Activity::TaskProcessor do
-  subject { described_class.new(task, domain, lookup, connection, middleware_chain) }
+  subject { described_class.new(task, domain, lookup, middleware_chain, config) }
 
   let(:domain) { 'test-domain' }
   let(:lookup) { instance_double('Cadence::ExecutableLookup', find: nil) }
@@ -13,12 +14,17 @@ describe Cadence::Activity::TaskProcessor do
   let(:activity_name) { 'TestActivity' }
   let(:connection) { instance_double('Cadence::Connection::Thrift') }
   let(:middleware_chain) { Cadence::Middleware::Chain.new }
+  let(:config) { Cadence::Configuration.new }
   let(:input) { ['arg1', 'arg2'] }
 
   describe '#process' do
     let(:context) { instance_double('Cadence::Activity::Context', async?: false) }
 
     before do
+      allow(Cadence::Connection)
+        .to receive(:generate)
+        .with(config.for_connection)
+        .and_return(connection)
       allow(Cadence::Metadata)
         .to receive(:generate)
         .with(Cadence::Metadata::ACTIVITY_TYPE, task, domain)
