@@ -1,7 +1,12 @@
 require 'cadence/testing'
+require 'cadence/client'
+require 'cadence/configuration'
 require 'cadence/workflow'
 
 describe Cadence::Testing::CadenceOverride do
+  let(:client) { Cadence::Client.new(config) }
+  let(:config) { Cadence::Configuration.new }
+
   class TestCadenceOverrideWorkflow < Cadence::Workflow
     domain 'default-domain'
     task_list 'default-task-list'
@@ -15,12 +20,12 @@ describe Cadence::Testing::CadenceOverride do
       let(:response) { CadenceThrift::StartWorkflowExecutionResponse.new(runId: 'xxx') }
 
       before { allow(Cadence::Connection).to receive(:generate).and_return(connection) }
-      after { Cadence.remove_instance_variable(:@connection) }
+      after { client.remove_instance_variable(:@connection) }
 
       it 'invokes original implementation' do
         allow(connection).to receive(:start_workflow_execution).and_return(response)
 
-        Cadence.start_workflow(TestCadenceOverrideWorkflow)
+        client.start_workflow(TestCadenceOverrideWorkflow)
 
         expect(connection)
           .to have_received(:start_workflow_execution)
@@ -42,7 +47,7 @@ describe Cadence::Testing::CadenceOverride do
       it 'calls the workflow directly' do
         allow(workflow).to receive(:execute)
 
-        Cadence.start_workflow(TestCadenceOverrideWorkflow)
+        client.start_workflow(TestCadenceOverrideWorkflow)
 
         expect(workflow).to have_received(:execute)
         expect(TestCadenceOverrideWorkflow)
@@ -52,7 +57,7 @@ describe Cadence::Testing::CadenceOverride do
 
       describe 'execution control' do
         subject do
-          Cadence.start_workflow(
+          client.start_workflow(
             TestCadenceOverrideWorkflow,
             options: { workflow_id: workflow_id, workflow_id_reuse_policy: policy }
           )
@@ -63,10 +68,10 @@ describe Cadence::Testing::CadenceOverride do
         let(:run_id) { SecureRandom.uuid }
         let(:error_class) { CadenceThrift::WorkflowExecutionAlreadyStartedError }
 
-        # Simulate exiwting execution
+        # Simulate existing execution
         before do
           if execution
-            Cadence.send(:executions)[[workflow_id, run_id]] = execution
+            client.send(:executions)[[workflow_id, run_id]] = execution
           end
         end
 
