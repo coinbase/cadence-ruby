@@ -1,28 +1,34 @@
 require 'cadence/workflow/decision_task_processor'
 require 'cadence/workflow'
 require 'cadence/executable_lookup'
-require 'cadence/client/thrift_client'
+require 'cadence/connection/thrift'
 require 'cadence/middleware/chain'
+require 'cadence/configuration'
 
 describe Cadence::Workflow::DecisionTaskProcessor do
   class TestWorkflow < Cadence::Workflow; end
 
-  subject { described_class.new(task, domain, lookup, client, middleware_chain) }
+  subject { described_class.new(task, domain, lookup, middleware_chain, config) }
 
   let(:task) { Fabricate(:decision_task_thrift) }
   let(:domain) { 'test-domain' }
   let(:lookup) { Cadence::ExecutableLookup.new }
-  let(:client) do
+  let(:connection) do
     instance_double(
-      Cadence::Client::ThriftClient,
+      Cadence::Connection::Thrift,
       respond_decision_task_completed: nil,
       respond_decision_task_failed: nil
     )
   end
   let(:middleware_chain) { Cadence::Middleware::Chain.new }
   let(:executor) { instance_double(Cadence::Workflow::Executor, run: []) }
+  let(:config) { Cadence::Configuration.new }
 
   before do
+    allow(Cadence::Connection)
+      .to receive(:generate)
+      .with(config.for_connection)
+      .and_return(connection)
     allow(Cadence.metrics).to receive(:timing)
     allow(Cadence.logger).to receive(:info)
     allow(Cadence.logger).to receive(:error)
@@ -35,7 +41,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
       allow(Cadence::Workflow::Executor)
         .to receive(:new)
-        .with(TestWorkflow, an_instance_of(Cadence::Workflow::History))
+        .with(TestWorkflow, an_instance_of(Cadence::Workflow::History), config)
         .and_return(executor)
     end
 
@@ -61,7 +67,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
     it 'completes the decision task' do
       subject.process
 
-      expect(client)
+      expect(connection)
         .to have_received(:respond_decision_task_completed)
         .with(task_token: task.taskToken, decisions: [])
     end
@@ -84,7 +90,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
       let(:history_2) { Fabricate(:worklfow_execution_history_thrift, nextPageToken: nil) }
 
       before do
-        allow(client)
+        allow(connection)
           .to receive(:get_workflow_execution_history)
           .and_return(history_1, history_2)
       end
@@ -92,7 +98,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
       it 'fetches missing history pages' do
         subject.process
 
-        expect(client)
+        expect(connection)
           .to have_received(:get_workflow_execution_history)
           .with(
             domain: domain,
@@ -101,7 +107,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
             next_page_token: task.nextPageToken
           )
 
-        expect(client)
+        expect(connection)
           .to have_received(:get_workflow_execution_history)
           .with(
             domain: domain,
@@ -123,7 +129,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
     context 'when unable to complete a workflow' do
       before do
-        allow(client)
+        allow(connection)
           .to receive(:respond_decision_task_completed)
           .and_raise(StandardError, 'Host unreachable')
       end
@@ -146,7 +152,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
     it 'fails the decision task' do
       subject.process
 
-      expect(client)
+      expect(connection)
         .to have_received(:respond_decision_task_failed)
         .with(
           task_token: task.taskToken,
@@ -176,7 +182,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
       subject.process
 
-      expect(client).not_to have_received(:respond_decision_task_failed)
+      expect(connection).not_to have_received(:respond_decision_task_failed)
     end
   end
 end

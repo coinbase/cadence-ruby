@@ -1,4 +1,3 @@
-require 'cadence/client'
 require 'cadence/workflow/poller'
 require 'cadence/activity/poller'
 require 'cadence/execution_options'
@@ -7,7 +6,8 @@ require 'cadence/middleware/entry'
 
 module Cadence
   class Worker
-    def initialize(options = {})
+    def initialize(config = Cadence.configuration, **options)
+      @config = config
       @options = options
       @workflows = Hash.new { |hash, key| hash[key] = ExecutableLookup.new }
       @activities = Hash.new { |hash, key| hash[key] = ExecutableLookup.new }
@@ -18,14 +18,14 @@ module Cadence
     end
 
     def register_workflow(workflow_class, options = {})
-      execution_options = ExecutionOptions.new(workflow_class, options)
+      execution_options = ExecutionOptions.new(workflow_class, options, config.default_execution_options)
       key = [execution_options.domain, execution_options.task_list]
 
       @workflows[key].add(execution_options.name, workflow_class)
     end
 
     def register_activity(activity_class, options = {})
-      execution_options = ExecutionOptions.new(activity_class, options)
+      execution_options = ExecutionOptions.new(activity_class, options, config.default_execution_options)
       key = [execution_options.domain, execution_options.task_list]
 
       @activities[key].add(execution_options.name, activity_class)
@@ -67,7 +67,7 @@ module Cadence
 
     private
 
-    attr_reader :options, :activities, :workflows, :pollers,
+    attr_reader :config, :options, :activities, :workflows, :pollers,
                 :decision_middleware, :activity_middleware
 
     def shutting_down?
@@ -75,11 +75,11 @@ module Cadence
     end
 
     def workflow_poller_for(domain, task_list, lookup)
-      Workflow::Poller.new(domain, task_list, lookup.freeze, decision_middleware, options)
+      Workflow::Poller.new(domain, task_list, lookup.freeze, config, decision_middleware, options)
     end
 
     def activity_poller_for(domain, task_list, lookup)
-      Activity::Poller.new(domain, task_list, lookup.freeze, activity_middleware, options)
+      Activity::Poller.new(domain, task_list, lookup.freeze, config, activity_middleware, options)
     end
 
     def trap_signals

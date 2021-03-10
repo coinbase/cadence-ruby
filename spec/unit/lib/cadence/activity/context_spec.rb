@@ -1,21 +1,22 @@
 require 'cadence/activity/context'
 require 'cadence/metadata/activity'
+require 'cadence/connection/thrift'
 
 describe Cadence::Activity::Context do
-  let(:client) { instance_double('Cadence::Client::ThriftClient') }
+  let(:connection) { instance_double('Cadence::Connection::Thrift') }
   let(:metadata_hash) { Fabricate(:activity_metadata).to_h }
   let(:metadata) { Cadence::Metadata::Activity.new(metadata_hash) }
   let(:task_token) { SecureRandom.uuid }
 
-  subject { described_class.new(client, metadata) }
+  subject { described_class.new(connection, metadata) }
 
   describe '#heartbeat' do
-    before { allow(client).to receive(:record_activity_task_heartbeat) }
+    before { allow(connection).to receive(:record_activity_task_heartbeat) }
 
     it 'records heartbeat' do
       subject.heartbeat
 
-      expect(client)
+      expect(connection)
         .to have_received(:record_activity_task_heartbeat)
         .with(task_token: metadata.task_token, details: nil)
     end
@@ -23,7 +24,7 @@ describe Cadence::Activity::Context do
     it 'records heartbeat with details' do
       subject.heartbeat(foo: :bar)
 
-      expect(client)
+      expect(connection)
         .to have_received(:record_activity_task_heartbeat)
         .with(task_token: metadata.task_token, details: { foo: :bar })
     end
@@ -37,7 +38,7 @@ describe Cadence::Activity::Context do
 
   describe '#async?' do
     subject { context.async? }
-    let(:context) { described_class.new(client, metadata) }
+    let(:context) { described_class.new(connection, metadata) }
 
     context 'when context is sync' do
       it { is_expected.to eq(false) }

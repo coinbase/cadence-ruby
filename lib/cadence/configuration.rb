@@ -3,8 +3,11 @@ require 'cadence/metrics_adapters/null'
 
 module Cadence
   class Configuration
+    Connection = Struct.new(:type, :host, :port, keyword_init: true)
+    Execution = Struct.new(:domain, :task_list, :timeouts, :headers, keyword_init: true)
+
     attr_reader :timeouts
-    attr_accessor :client_type, :host, :port, :logger, :metrics_adapter, :domain, :task_list, :headers
+    attr_accessor :connection_type, :host, :port, :logger, :metrics_adapter, :domain, :task_list, :headers
 
     DEFAULT_TIMEOUTS = {
       execution: 60,          # End-to-end workflow time
@@ -20,7 +23,7 @@ module Cadence
     DEFAULT_TASK_LIST = 'default-task-list'.freeze
 
     def initialize
-      @client_type = :thrift
+      @connection_type = :thrift
       @logger = Logger.new(STDOUT, progname: 'cadence_client')
       @metrics_adapter = MetricsAdapters::Null.new
       @timeouts = DEFAULT_TIMEOUTS
@@ -31,6 +34,23 @@ module Cadence
 
     def timeouts=(new_timeouts)
       @timeouts = DEFAULT_TIMEOUTS.merge(new_timeouts)
+    end
+
+    def for_connection
+      Connection.new(
+        type: connection_type,
+        host: host,
+        port: port
+      ).freeze
+    end
+
+    def default_execution_options
+      Execution.new(
+        domain: domain,
+        task_list: task_list,
+        timeouts: timeouts,
+        headers: headers
+      ).freeze
     end
   end
 end

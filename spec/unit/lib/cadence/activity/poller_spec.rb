@@ -1,24 +1,26 @@
 require 'cadence/activity/poller'
 require 'cadence/middleware/entry'
+require 'cadence/configuration'
 
 describe Cadence::Activity::Poller do
-  let(:client) { instance_double('Cadence::Client::ThriftClient') }
+  let(:connection) { instance_double('Cadence::Connection::Thrift') }
   let(:domain) { 'test-domain' }
   let(:task_list) { 'test-task-list' }
   let(:lookup) { instance_double('Cadence::ExecutableLookup') }
   let(:thread_pool) do
     instance_double(Cadence::ThreadPool, wait_for_available_threads: nil, shutdown: nil)
   end
+  let(:config) { Cadence::Configuration.new }
   let(:middleware_chain) { instance_double(Cadence::Middleware::Chain) }
   let(:middleware) { [] }
 
-  subject { described_class.new(domain, task_list, lookup, middleware) }
+  subject { described_class.new(domain, task_list, lookup, config, middleware) }
 
   before do
-    allow(Cadence::Client).to receive(:generate).and_return(client)
+    allow(Cadence::Connection).to receive(:generate).and_return(connection)
     allow(Cadence::ThreadPool).to receive(:new).and_return(thread_pool)
     allow(Cadence::Middleware::Chain).to receive(:new).and_return(middleware_chain)
-    allow(client).to receive(:poll_for_activity_task).and_return(nil)
+    allow(connection).to receive(:poll_for_activity_task).and_return(nil)
     allow(Cadence.metrics).to receive(:timing)
   end
 
@@ -31,13 +33,13 @@ describe Cadence::Activity::Poller do
       # stop poller before inspecting
       subject.stop; subject.wait
 
-      expect(client)
+      expect(connection)
         .to have_received(:poll_for_activity_task)
         .with(domain: domain, task_list: task_list)
         .twice
     end
 
-    it 'polls for activity tasks' do
+    it 'measures time between polls' do
       allow(subject).to receive(:shutting_down?).and_return(false, false, true)
 
       subject.start
@@ -57,20 +59,22 @@ describe Cadence::Activity::Poller do
     end
 
     context 'with options passed' do
-      subject { described_class.new(domain, task_list, lookup, middleware, options) }
+      subject { described_class.new(domain, task_list, lookup, config, middleware, options) }
       let(:options) { { polling_ttl: 42, thread_pool_size: 42 } }
 
       before do
         allow(subject).to receive(:shutting_down?).and_return(false, true)
       end
 
-      it 'passes options to the client' do
+      it 'passes options to the connection' do
         subject.start
 
         # stop poller before inspecting
         subject.stop; subject.wait
 
-        expect(Cadence::Client).to have_received(:generate).with(options)
+        expect(Cadence::Connection)
+          .to have_received(:generate)
+          .with(config.for_connection, options)
       end
 
       it 'creates thread pool of a specified size' do
@@ -89,7 +93,7 @@ describe Cadence::Activity::Poller do
 
       before do
         allow(subject).to receive(:shutting_down?).and_return(false, true)
-        allow(client).to receive(:poll_for_activity_task).and_return(task)
+        allow(connection).to receive(:poll_for_activity_task).and_return(task)
         allow(Cadence::Activity::TaskProcessor).to receive(:new).and_return(task_processor)
         allow(thread_pool).to receive(:schedule).and_yield
       end
@@ -111,7 +115,7 @@ describe Cadence::Activity::Poller do
 
         expect(Cadence::Activity::TaskProcessor)
           .to have_received(:new)
-          .with(task, domain, lookup, client, middleware_chain)
+          .with(task, domain, lookup, middleware_chain, config)
         expect(task_processor).to have_received(:process)
       end
 
@@ -134,15 +138,15 @@ describe Cadence::Activity::Poller do
           expect(Cadence::Middleware::Chain).to have_received(:new).with(middleware)
           expect(Cadence::Activity::TaskProcessor)
             .to have_received(:new)
-            .with(task, domain, lookup, client, middleware_chain)
+            .with(task, domain, lookup, middleware_chain, config)
         end
       end
     end
 
-    context 'when client is unable to poll' do
+    context 'when connection is unable to poll' do
       before do
         allow(subject).to receive(:shutting_down?).and_return(false, true)
-        allow(client).to receive(:poll_for_activity_task).and_raise(StandardError)
+        allow(connection).to receive(:poll_for_activity_task).and_raise(StandardError)
       end
 
       it 'logs' do

@@ -1,19 +1,20 @@
 require 'cadence'
 require 'cadence/workflow'
+require 'cadence/connection/thrift'
 
 describe Cadence do
   describe 'client operations' do
-    let(:client) { instance_double(Cadence::Client::ThriftClient) }
+    let(:connection) { instance_double(Cadence::Connection::Thrift) }
 
-    before { allow(Cadence::Client).to receive(:generate).and_return(client) }
-    after { described_class.remove_instance_variable(:@client) }
+    before { allow(Cadence::Connection).to receive(:generate).and_return(connection) }
+    after { described_class.remove_instance_variable(:@connection) }
 
     describe '.start_workflow' do
       let(:cadence_response) do
         CadenceThrift::StartWorkflowExecutionResponse.new(runId: 'xxx')
       end
 
-      before { allow(client).to receive(:start_workflow_execution).and_return(cadence_response) }
+      before { allow(connection).to receive(:start_workflow_execution).and_return(cadence_response) }
 
       context 'using a workflow class' do
         class TestStartWorkflow < Cadence::Workflow
@@ -30,7 +31,7 @@ describe Cadence do
         it 'starts a workflow using the default options' do
           described_class.start_workflow(TestStartWorkflow, 42)
 
-          expect(client)
+          expect(connection)
             .to have_received(:start_workflow_execution)
             .with(
               domain: 'default-test-domain',
@@ -57,7 +58,7 @@ describe Cadence do
             }
           )
 
-          expect(client)
+          expect(connection)
             .to have_received(:start_workflow_execution)
             .with(
               domain: 'test-domain',
@@ -86,7 +87,7 @@ describe Cadence do
             }
           )
 
-          expect(client)
+          expect(connection)
             .to have_received(:start_workflow_execution)
             .with(
               domain: 'test-domain',
@@ -111,7 +112,7 @@ describe Cadence do
             options: { name: 'test-workflow' }
           )
 
-          expect(client)
+          expect(connection)
             .to have_received(:start_workflow_execution)
             .with(
               domain: 'default-test-domain',
@@ -129,7 +130,7 @@ describe Cadence do
         it 'starts a workflow using specified workflow_id' do
           described_class.start_workflow(TestStartWorkflow, 42, options: { workflow_id: '123' })
 
-          expect(client)
+          expect(connection)
             .to have_received(:start_workflow_execution)
             .with(
               domain: 'default-test-domain',
@@ -149,7 +150,7 @@ describe Cadence do
             TestStartWorkflow, 42, options: { workflow_id_reuse_policy: :allow }
           )
 
-          expect(client)
+          expect(connection)
             .to have_received(:start_workflow_execution)
             .with(
               domain: 'default-test-domain',
@@ -173,7 +174,7 @@ describe Cadence do
             options: { domain: 'test-domain', task_list: 'test-task-list' }
           )
 
-          expect(client)
+          expect(connection)
             .to have_received(:start_workflow_execution)
             .with(
               domain: 'test-domain',
@@ -191,12 +192,12 @@ describe Cadence do
     end
 
     describe '.register_domain' do
-      before { allow(client).to receive(:register_domain).and_return(nil) }
+      before { allow(connection).to receive(:register_domain).and_return(nil) }
 
       it 'registers domain with the specified name' do
         described_class.register_domain('new-domain')
 
-        expect(client)
+        expect(connection)
           .to have_received(:register_domain)
           .with(name: 'new-domain', description: nil)
       end
@@ -204,14 +205,14 @@ describe Cadence do
       it 'registers domain with the specified name and description' do
         described_class.register_domain('new-domain', 'domain description')
 
-        expect(client)
+        expect(connection)
           .to have_received(:register_domain)
           .with(name: 'new-domain', description: 'domain description')
       end
 
       context 'when domain is already registered' do
         before do
-          allow(client)
+          allow(connection)
             .to receive(:register_domain)
             .and_raise(CadenceThrift::DomainAlreadyExistsError)
         end
@@ -225,12 +226,12 @@ describe Cadence do
     end
 
     describe '.terminate_workflow' do
-      before { allow(client).to receive(:terminate_workflow_execution).and_return(nil) }
+      before { allow(connection).to receive(:terminate_workflow_execution).and_return(nil) }
 
       it 'terminates workflow execution' do
         described_class.terminate_workflow('test-domain', 'xxx', 'yyy')
 
-        expect(client)
+        expect(connection)
           .to have_received(:terminate_workflow_execution)
           .with(
             domain: 'test-domain',
@@ -250,7 +251,7 @@ describe Cadence do
           details: '{ "foo": "bar" }'
         )
 
-        expect(client)
+        expect(connection)
           .to have_received(:terminate_workflow_execution)
           .with(
             domain: 'test-domain',
@@ -271,12 +272,12 @@ describe Cadence do
       end
       let(:info_thrift) { Fabricate(:workflow_execution_info_thrift) }
 
-      before { allow(client).to receive(:describe_workflow_execution).and_return(response) }
+      before { allow(connection).to receive(:describe_workflow_execution).and_return(response) }
 
       it 'requests execution info from Cadence' do
         described_class.fetch_workflow_execution_info('domain', '111', '222')
 
-        expect(client)
+        expect(connection)
           .to have_received(:describe_workflow_execution)
           .with(domain: 'domain', workflow_id: '111', run_id: '222')
       end
@@ -296,16 +297,16 @@ describe Cadence do
       before do
         allow(history_mock).to receive(:events).and_return([event_mock])
         allow(response_mock).to receive(:history).and_return(history_mock)
-        allow(client).to receive(:get_workflow_execution_history).and_return(response_mock)
+        allow(connection).to receive(:get_workflow_execution_history).and_return(response_mock)
       end
 
-      it 'wraps client get_workflow_execution_history' do
+      it 'wraps connection get_workflow_execution_history' do
           described_class.get_workflow_history(
             domain:'default-test-domain',
             workflow_id: '123',
             run_id: '1234'
           )
-          expect(client).to have_received(:get_workflow_execution_history).with(
+          expect(connection).to have_received(:get_workflow_execution_history).with(
             domain: 'default-test-domain',
             workflow_id: '123',
             run_id: '1234'
@@ -316,12 +317,12 @@ describe Cadence do
     describe '.reset_workflow' do
       let(:cadence_response) { CadenceThrift::StartWorkflowExecutionResponse.new(runId: 'xxx') }
 
-      before { allow(client).to receive(:reset_workflow_execution).and_return(cadence_response) }
+      before { allow(connection).to receive(:reset_workflow_execution).and_return(cadence_response) }
 
       context 'when decision_task_id is provided' do
         let(:decision_task_id) { 42 }
 
-        it 'calls client reset_workflow_execution' do
+        it 'calls connection reset_workflow_execution' do
           described_class.reset_workflow(
             'default-test-domain',
             '123',
@@ -330,7 +331,7 @@ describe Cadence do
             reason: 'Test reset'
           )
 
-          expect(client).to have_received(:reset_workflow_execution).with(
+          expect(connection).to have_received(:reset_workflow_execution).with(
             domain: 'default-test-domain',
             workflow_id: '123',
             run_id: '1234',
@@ -362,12 +363,12 @@ describe Cadence do
       end
 
       describe '.complete_activity' do
-        before { allow(client).to receive(:respond_activity_task_completed_by_id).and_return(nil) }
+        before { allow(connection).to receive(:respond_activity_task_completed_by_id).and_return(nil) }
 
         it 'completes activity with a result' do
           described_class.complete_activity(async_token, 'all work completed')
 
-          expect(client)
+          expect(connection)
             .to have_received(:respond_activity_task_completed_by_id)
             .with(
               domain: domain,
@@ -381,7 +382,7 @@ describe Cadence do
         it 'completes activity without a result' do
           described_class.complete_activity(async_token)
 
-          expect(client)
+          expect(connection)
             .to have_received(:respond_activity_task_completed_by_id)
             .with(
               domain: domain,
@@ -394,12 +395,12 @@ describe Cadence do
       end
 
       describe '.fail_activity' do
-        before { allow(client).to receive(:respond_activity_task_failed_by_id).and_return(nil) }
+        before { allow(connection).to receive(:respond_activity_task_failed_by_id).and_return(nil) }
 
         it 'fails activity with a provided error' do
           described_class.fail_activity(async_token, StandardError.new('something went wrong'))
 
-          expect(client)
+          expect(connection)
             .to have_received(:respond_activity_task_failed_by_id)
             .with(
               domain: domain,

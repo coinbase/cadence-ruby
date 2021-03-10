@@ -15,10 +15,11 @@ require 'cadence/workflow/state_manager'
 module Cadence
   class Workflow
     class Context
-      def initialize(state_manager, dispatcher, metadata)
+      def initialize(state_manager, dispatcher, metadata, config)
         @state_manager = state_manager
         @dispatcher = dispatcher
         @metadata = metadata
+        @config = config
       end
 
       def logger
@@ -39,7 +40,7 @@ module Cadence
         options = args.delete(:options) || {}
         input << args unless args.empty?
 
-        execution_options = ExecutionOptions.new(activity_class, options)
+        execution_options = ExecutionOptions.new(activity_class, options, config.default_execution_options)
 
         decision = Decision::ScheduleActivity.new(
           activity_id: options[:activity_id],
@@ -97,7 +98,7 @@ module Cadence
         options = args.delete(:options) || {}
         input << args unless args.empty?
 
-        execution_options = ExecutionOptions.new(workflow_class, options)
+        execution_options = ExecutionOptions.new(workflow_class, options, config.default_execution_options)
 
         decision = Decision::StartChildWorkflow.new(
           workflow_id: options[:workflow_id] || SecureRandom.uuid,
@@ -243,7 +244,7 @@ module Cadence
 
       private
 
-      attr_reader :state_manager, :dispatcher, :metadata
+      attr_reader :state_manager, :dispatcher, :metadata, :config
 
       def schedule_decision(decision)
         state_manager.schedule(decision)

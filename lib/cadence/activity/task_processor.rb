@@ -1,18 +1,19 @@
 require 'cadence/metadata'
 require 'cadence/activity/context'
 require 'cadence/json'
+require 'cadence/connection'
 
 module Cadence
   class Activity
     class TaskProcessor
-      def initialize(task, domain, activity_lookup, client, middleware_chain)
+      def initialize(task, domain, activity_lookup, middleware_chain, config)
         @task = task
         @domain = domain
         @task_token = task.taskToken
         @activity_name = task.activityType.name
         @activity_class = activity_lookup.find(activity_name)
-        @client = client
         @middleware_chain = middleware_chain
+        @config = config
       end
 
       def process
@@ -27,7 +28,7 @@ module Cadence
         end
 
         metadata = Metadata.generate(Metadata::ACTIVITY_TYPE, task, domain)
-        context = Activity::Context.new(client, metadata)
+        context = Activity::Context.new(connection, metadata)
 
         result = middleware_chain.invoke(metadata) do
           activity_class.execute_in_context(context, JSON.deserialize(task.input))
@@ -49,7 +50,12 @@ module Cadence
 
       private
 
-      attr_reader :task, :domain, :task_token, :activity_name, :activity_class, :client, :middleware_chain
+      attr_reader :task, :domain, :task_token, :activity_name, :activity_class,
+        :middleware_chain, :config
+
+      def connection
+        @connection ||= Cadence::Connection.generate(config.for_connection)
+      end
 
       def queue_time_ms
         ((task.startedTimestamp - task.scheduledTimestampOfThisAttempt) / 1_000_000).round
@@ -57,14 +63,14 @@ module Cadence
 
       def respond_completed(result)
         Cadence.logger.info("Activity #{activity_name} completed")
-        client.respond_activity_task_completed(task_token: task_token, result: result)
+        connection.respond_activity_task_completed(task_token: task_token, result: result)
       rescue StandardError => error
         Cadence.logger.error("Unable to complete Activity #{activity_name}: #{error.inspect}")
       end
 
       def respond_failed(reason, details)
         Cadence.logger.error("Activity #{activity_name} failed with: #{reason}")
-        client.respond_activity_task_failed(task_token: task_token, reason: reason, details: details)
+        connection.respond_activity_task_failed(task_token: task_token, reason: reason, details: details)
       rescue StandardError => error
         Cadence.logger.error("Unable to fail Activity #{activity_name}: #{error.inspect}")
       end

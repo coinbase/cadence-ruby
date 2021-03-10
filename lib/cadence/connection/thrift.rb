@@ -1,12 +1,12 @@
 require 'thrift'
 require 'securerandom'
 require 'cadence/json'
-require 'cadence/client/errors'
+require 'cadence/connection/errors'
 require 'gen/thrift/workflow_service'
 
 module Cadence
-  module Client
-    class ThriftClient
+  module Connection
+    class Thrift
       WORKFLOW_ID_REUSE_POLICY = {
         allow_failed: CadenceThrift::WorkflowIdReusePolicy::AllowDuplicateFailedOnly,
         allow: CadenceThrift::WorkflowIdReusePolicy::AllowDuplicate,
@@ -344,7 +344,7 @@ module Cadence
       attr_reader :url, :identity, :options, :mutex
 
       def transport
-        @transport ||= Thrift::HTTPClientTransport.new(url).tap do |http|
+        @transport ||= ::Thrift::HTTPClientTransport.new(url).tap do |http|
           http.add_headers(
             'Rpc-Caller' => 'ruby-client',
             'Rpc-Encoding' => 'thrift',
@@ -356,7 +356,7 @@ module Cadence
 
       def connection
         @connection ||= begin
-          protocol = Thrift::BinaryProtocol.new(transport)
+          protocol = ::Thrift::BinaryProtocol.new(transport)
           CadenceThrift::WorkflowService::Client.new(protocol)
         end
       end

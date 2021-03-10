@@ -1,4 +1,4 @@
-require 'cadence/client'
+require 'cadence/connection'
 require 'cadence/thread_pool'
 require 'cadence/middleware/chain'
 require 'cadence/workflow/decision_task_processor'
@@ -10,10 +10,11 @@ module Cadence
         thread_pool_size: 1
       }.freeze
 
-      def initialize(domain, task_list, workflow_lookup, middleware = [], options = {})
+      def initialize(domain, task_list, workflow_lookup, config, middleware = [], options = {})
         @domain = domain
         @task_list = task_list
         @workflow_lookup = workflow_lookup
+        @config = config
         @middleware = middleware
         @options = DEFAULT_OPTIONS.merge(options)
         @shutting_down = false
@@ -36,10 +37,10 @@ module Cadence
 
       private
 
-      attr_reader :domain, :task_list, :client, :workflow_lookup, :middleware, :options
+      attr_reader :domain, :task_list, :connection, :workflow_lookup, :config, :middleware, :options
 
-      def client
-        @client ||= Cadence::Client.generate(options)
+      def connection
+        @connection ||= Cadence::Connection.generate(config.for_connection, options)
       end
 
       def shutting_down?
@@ -68,17 +69,16 @@ module Cadence
       end
 
       def poll_for_task
-        client.poll_for_decision_task(domain: domain, task_list: task_list)
+        connection.poll_for_decision_task(domain: domain, task_list: task_list)
       rescue StandardError => error
         Cadence.logger.error("Unable to poll for a decision task: #{error.inspect}")
         nil
       end
 
       def process(task)
-        client = Cadence::Client.generate
         middleware_chain = Middleware::Chain.new(middleware)
 
-        DecisionTaskProcessor.new(task, domain, workflow_lookup, client, middleware_chain).process
+        DecisionTaskProcessor.new(task, domain, workflow_lookup, middleware_chain, config).process
       end
 
       def thread_pool
