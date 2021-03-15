@@ -46,5 +46,5 @@ module Cadence
   end
 end
 
-Cadence.singleton_class.prepend Cadence::Testing::CadenceOverride
+Cadence::Client.prepend Cadence::Testing::CadenceOverride
 Cadence::Workflow.extend Cadence::Testing::WorkflowOverride
