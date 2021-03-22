@@ -5,6 +5,7 @@ module Cadence
     class Error; end
     class ArgumentError; end
   end
+  class Configuration; end
   module Metadata
     class Activity; end
     class Base; end
