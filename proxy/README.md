@@ -1,6 +1,6 @@
 # Cadence Proxy
 
-A small executable that accepts incomming Thrift/HTTP requests and proxies them to Cadence server
+A small executable that accepts incoming Thrift/HTTP requests and proxies them to Cadence server
 using Thrift/TChannel.
 
 ## Why?
