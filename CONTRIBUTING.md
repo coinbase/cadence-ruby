@@ -1,4 +1,4 @@
-# Contributing to Odin
+# Contributing to Cadence-Ruby
 
 ## Code of Conduct
 

@@ -189,7 +189,7 @@ Besides calling activities workflows can:
 
 - Use timers
 - Receive signals
-- Execute other (child) workflows [not yet implemented]
+- Execute other (child) workflows
 - Respond to queries [not yet implemented]
 
 
@@ -433,7 +433,7 @@ Cadence::Testing.local! do
 end
 ```
 
-Make sure to check out [example integration specs](examples/specs/integration) for more details.
+Make sure to check out [example integration specs](examples/spec/integration) for more details.
 
 
 ## TODO

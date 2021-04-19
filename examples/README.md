@@ -1,6 +1,6 @@
 # Ruby Cadence Examples
 
-This directory contains examples demonstraiting different features or this library and Cadence.
+This directory contains examples demonstrating different features of this library and Cadence.
 
 To try these out you need to have Cadence and TChannel Proxy running ([setup instructions](https://github.com/coinbase/cadence-ruby#installing-dependencies)).
 
