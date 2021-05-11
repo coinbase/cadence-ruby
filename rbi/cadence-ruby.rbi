@@ -1,5 +1,7 @@
 module Cadence
-  class Activity; end
+  class Activity
+    class AsyncToken; end
+  end
   class ActivityException; end
   module Client
     class Error; end
