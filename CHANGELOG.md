@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.3
+- Expose Cadence::Activity::AsyncToken in RBI
+
 ## 0.1.2
 - Make Cadence::Client initializable allowing to connect to multiple clusters from the same app
 
