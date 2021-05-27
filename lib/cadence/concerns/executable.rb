@@ -1,5 +1,3 @@
-require 'cadence/retry_policy'
-
 module Cadence
   module Concerns
     module Executable
@@ -15,8 +13,7 @@ module Cadence
 
       def retry_policy(*args)
         return @retry_policy if args.empty?
-        @retry_policy = Cadence::RetryPolicy.new(args.first)
-        @retry_policy.validate!
+        @retry_policy = args.first
       end
 
       def timeouts(*args)
