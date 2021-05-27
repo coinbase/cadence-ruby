@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+- Fix a bug which prevented retry_policy from being passed as explicit options
+- Make retry_policy options mergeable with the values in an Activity or a Workflow
+
 ## 0.1.3
 - Expose Cadence::Activity::AsyncToken in RBI
 
