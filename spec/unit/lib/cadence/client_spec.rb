@@ -1,6 +1,8 @@
+require 'securerandom'
 require 'cadence/client'
 require 'cadence/configuration'
 require 'cadence/workflow'
+require 'cadence/workflow/history'
 require 'cadence/connection/thrift'
 
 describe Cadence::Client do
@@ -8,6 +10,9 @@ describe Cadence::Client do
 
   let(:config) { Cadence::Configuration.new }
   let(:connection) { instance_double(Cadence::Connection::Thrift) }
+  let(:domain) { 'detault-test-domain' }
+  let(:workflow_id) { SecureRandom.uuid }
+  let(:run_id) { SecureRandom.uuid }
 
   before do
     allow(Cadence::Connection)
@@ -15,7 +20,12 @@ describe Cadence::Client do
       .with(config.for_connection)
       .and_return(connection)
   end
-  after { subject.remove_instance_variable(:@connection) }
+
+  after do
+    if subject.instance_variable_get(:@connection)
+      subject.remove_instance_variable(:@connection)
+    end
+  end
 
   describe '#start_workflow' do
     let(:cadence_response) do
@@ -324,8 +334,35 @@ describe Cadence::Client do
 
   describe '#reset_workflow' do
     let(:cadence_response) { CadenceThrift::StartWorkflowExecutionResponse.new(runId: 'xxx') }
+    let(:history) do
+      Cadence::Workflow::History.new([
+        Fabricate(:workflow_execution_started_event_thrift, eventId: 1),
+        Fabricate(:decision_task_scheduled_event_thrift, eventId: 2),
+        Fabricate(:decision_task_started_event_thrift, eventId: 3),
+        Fabricate(:decision_task_completed_event_thrift, eventId: 4),
+        Fabricate(:activity_task_scheduled_event_thrift, eventId: 5),
+        Fabricate(:activity_task_started_event_thrift, eventId: 6),
+        Fabricate(:activity_task_completed_event_thrift, eventId: 7),
+        Fabricate(:decision_task_scheduled_event_thrift, eventId: 8),
+        Fabricate(:decision_task_started_event_thrift, eventId: 9),
+        Fabricate(:decision_task_completed_event_thrift, eventId: 10),
+        Fabricate(:activity_task_scheduled_event_thrift, eventId: 11),
+        Fabricate(:activity_task_started_event_thrift, eventId: 12),
+        Fabricate(:activity_task_failed_event_thrift, eventId: 13),
+        Fabricate(:decision_task_scheduled_event_thrift, eventId: 14),
+        Fabricate(:decision_task_started_event_thrift, eventId: 15),
+        Fabricate(:decision_task_completed_event_thrift, eventId: 16),
+        Fabricate(:workflow_execution_completed_event_thrift, eventId: 17)
+      ])
+    end
 
-    before { allow(connection).to receive(:reset_workflow_execution).and_return(cadence_response) }
+    before do
+      allow(connection).to receive(:reset_workflow_execution).and_return(cadence_response)
+      allow(subject)
+        .to receive(:get_workflow_history)
+        .with(domain: domain, workflow_id: workflow_id, run_id: run_id)
+        .and_return(history)
+    end
 
     context 'when decision_task_id is provided' do
       let(:decision_task_id) { 42 }
@@ -357,6 +394,86 @@ describe Cadence::Client do
         )
 
         expect(result).to eq('xxx')
+      end
+    end
+
+    context 'when neither strategy nor decision_task_id is provided' do
+      it 'uses default strategy' do
+        subject.reset_workflow(domain, workflow_id, run_id)
+
+        expect(connection).to have_received(:reset_workflow_execution).with(
+          domain: domain,
+          workflow_id: workflow_id,
+          run_id: run_id,
+          reason: 'manual reset',
+          decision_task_event_id: 16
+        )
+      end
+    end
+
+    context 'when both strategy and decision_task_id are provided' do
+      it 'uses default strategy' do
+        expect do
+          subject.reset_workflow(
+            domain,
+            workflow_id,
+            run_id,
+            strategy: :last_decision_task,
+            decision_task_id: 10
+          )
+        end.to raise_error(ArgumentError, 'Please specify either :strategy or :decision_task_id')
+      end
+    end
+
+    context 'with a specified strategy' do
+      context ':last_decision_task' do
+        it 'resets workflow' do
+          subject.reset_workflow(domain, workflow_id, run_id, strategy: :last_decision_task)
+
+          expect(connection).to have_received(:reset_workflow_execution).with(
+            domain: domain,
+            workflow_id: workflow_id,
+            run_id: run_id,
+            reason: 'manual reset',
+            decision_task_event_id: 16
+          )
+        end
+      end
+
+      context ':first_decision_task' do
+        it 'resets workflow' do
+          subject.reset_workflow(domain, workflow_id, run_id, strategy: :first_decision_task)
+
+          expect(connection).to have_received(:reset_workflow_execution).with(
+            domain: domain,
+            workflow_id: workflow_id,
+            run_id: run_id,
+            reason: 'manual reset',
+            decision_task_event_id: 4
+          )
+        end
+      end
+
+      context ':last_failed_activity' do
+        it 'resets workflow' do
+          subject.reset_workflow(domain, workflow_id, run_id, strategy: :last_failed_activity)
+
+          expect(connection).to have_received(:reset_workflow_execution).with(
+            domain: domain,
+            workflow_id: workflow_id,
+            run_id: run_id,
+            reason: 'manual reset',
+            decision_task_event_id: 10
+          )
+        end
+      end
+
+      context 'unsupported strategy' do
+        it 'resets workflow' do
+          expect do
+            subject.reset_workflow(domain, workflow_id, run_id, strategy: :foobar)
+          end.to raise_error(ArgumentError, 'Unsupported reset strategy')
+        end
       end
     end
   end

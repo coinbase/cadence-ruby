@@ -11,8 +11,8 @@ module Cadence
         @iterator = @events.each
       end
 
-      def last_completed_decision_task
-        events.select { |event| event.type == 'DecisionTaskCompleted' }.last
+      def find_event_by_id(id)
+        events.find { |event| event.id == id }
       end
 
       # It is very important to replay the History window by window in order to

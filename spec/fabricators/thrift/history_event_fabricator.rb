@@ -68,3 +68,52 @@ Fabricator(:decision_task_completed_event_thrift, from: :history_event_thrift) d
     )
   end
 end
+
+Fabricator(:activity_task_scheduled_event_thrift, from: :history_event_thrift) do
+  eventType { CadenceThrift::EventType::ActivityTaskScheduled }
+  activityTaskScheduledEventAttributes do |attrs|
+    CadenceThrift::ActivityTaskScheduledEventAttributes.new(
+      activityId: attrs[:eventId],
+      activityType: CadenceThrift::ActivityType.new(name: 'TestActivity'),
+      decisionTaskCompletedEventId: attrs[:eventId] - 1,
+      domain: 'test-domain',
+      taskList: Fabricate(:task_list_thrift)
+    )
+  end
+end
+
+Fabricator(:activity_task_started_event_thrift, from: :history_event_thrift) do
+  eventType { CadenceThrift::EventType::ActivityTaskStarted }
+  activityTaskStartedEventAttributes do |attrs|
+    CadenceThrift::ActivityTaskStartedEventAttributes.new(
+      scheduledEventId: attrs[:eventId] - 1,
+      identity: 'test-worker@test-host',
+      requestId: SecureRandom.uuid
+    )
+  end
+end
+
+Fabricator(:activity_task_completed_event_thrift, from: :history_event_thrift) do
+  eventType { CadenceThrift::EventType::ActivityTaskCompleted }
+  activityTaskCompletedEventAttributes do |attrs|
+    CadenceThrift::ActivityTaskCompletedEventAttributes.new(
+      result: nil,
+      scheduledEventId: attrs[:eventId] - 2,
+      startedEventId: attrs[:eventId] - 1,
+      identity: 'test-worker@test-host'
+    )
+  end
+end
+
+Fabricator(:activity_task_failed_event_thrift, from: :history_event_thrift) do
+  eventType { CadenceThrift::EventType::ActivityTaskFailed }
+  activityTaskFailedEventAttributes do |attrs|
+    CadenceThrift::ActivityTaskFailedEventAttributes.new(
+      reason: 'StandardError',
+      details: 'Activity failed',
+      scheduledEventId: attrs[:eventId] - 2,
+      startedEventId: attrs[:eventId] - 1,
+      identity: 'test-worker@test-host'
+    )
+  end
+end
