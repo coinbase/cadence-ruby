@@ -5,6 +5,7 @@ require 'cadence/activity/async_token'
 require 'cadence/workflow'
 require 'cadence/workflow/history'
 require 'cadence/workflow/execution_info'
+require 'cadence/reset_strategy'
 
 module Cadence
   class Client
@@ -73,9 +74,16 @@ module Cadence
       )
     end
 
-    def reset_workflow(domain, workflow_id, run_id, decision_task_id: nil, reason: 'manual reset')
-      decision_task_id ||= get_last_completed_decision_task(domain, workflow_id, run_id)
-      raise Error, 'Could not find a completed decision task event' unless decision_task_id
+    def reset_workflow(domain, workflow_id, run_id, strategy: nil, decision_task_id: nil, reason: 'manual reset')
+      # Pick default strategy for backwards-compatibility
+      strategy ||= :last_decision_task unless decision_task_id
+
+      if strategy && decision_task_id
+        raise ArgumentError, 'Please specify either :strategy or :decision_task_id'
+      end
+
+      decision_task_id ||= find_decision_task(domain, workflow_id, run_id, strategy)&.id
+      raise Error, 'Could not find an event to reset to' unless decision_task_id
 
       response = connection.reset_workflow_execution(
         domain: domain,
@@ -150,14 +158,31 @@ module Cadence
       @connection ||= Cadence::Connection.generate(config.for_connection)
     end
 
-    def get_last_completed_decision_task(domain, workflow_id, run_id)
+    def find_decision_task(domain, workflow_id, run_id, strategy)
       history = get_workflow_history(
         domain: domain,
         workflow_id: workflow_id,
         run_id: run_id
       )
 
-      history.last_completed_decision_task&.id
+      # TODO: Move this into a separate class if it keeps growing
+      case strategy
+      when ResetStrategy::LAST_DECISION_TASK
+        events = %[DecisionTaskCompleted DecisionTaskTimedOut DecisionTaskFailed].freeze
+        history.events.select { |event| events.include?(event.type) }.last
+      when ResetStrategy::FIRST_DECISION_TASK
+        events = %[DecisionTaskCompleted DecisionTaskTimedOut DecisionTaskFailed].freeze
+        history.events.select { |event| events.include?(event.type) }.first
+      when ResetStrategy::LAST_FAILED_ACTIVITY
+        events = %[ActivityTaskFailed ActivityTaskTimedOut].freeze
+        failed_event = history.events.select { |event| events.include?(event.type) }.last
+        return unless failed_event
+
+        scheduled_event = history.find_event_by_id(failed_event.attributes.scheduledEventId)
+        history.find_event_by_id(scheduled_event.attributes.decisionTaskCompletedEventId)
+      else
+        raise ArgumentError, 'Unsupported reset strategy'
+      end
     end
   end
 end

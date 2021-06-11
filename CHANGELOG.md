@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.5
+- Implement strategies for resetting workflows
+
 ## 0.1.4
 - Fix a bug which prevented retry_policy from being passed as explicit options
 - Make retry_policy options mergeable with the values in an Activity or a Workflow
