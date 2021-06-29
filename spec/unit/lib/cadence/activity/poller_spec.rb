@@ -159,7 +159,7 @@ describe Cadence::Activity::Poller do
 
         expect(Cadence.logger)
           .to have_received(:error)
-          .with('Unable to poll for an activity task: #<StandardError: StandardError>')
+          .with('Unable to poll for an activity task', error: '#<StandardError: StandardError>')
       end
     end
   end

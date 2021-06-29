@@ -27,7 +27,7 @@ module Cadence
 
       def stop
         @shutting_down = true
-        Cadence.logger.info('Shutting down a workflow poller')
+        Cadence.logger.info('Shutting down a workflow poller', domain: domain, task_list: task_list)
       end
 
       def wait
@@ -58,7 +58,7 @@ module Cadence
 
           time_diff_ms = ((Time.now - last_poll_time) * 1000).round
           Cadence.metrics.timing('workflow_poller.time_since_last_poll', time_diff_ms, metrics_tags)
-          Cadence.logger.debug("Polling for decision tasks (#{domain} / #{task_list})")
+          Cadence.logger.debug('Polling for decision tasks', domain: domain, task_list: task_list)
 
           task = poll_for_task
           last_poll_time = Time.now
@@ -71,7 +71,7 @@ module Cadence
       def poll_for_task
         connection.poll_for_decision_task(domain: domain, task_list: task_list)
       rescue StandardError => error
-        Cadence.logger.error("Unable to poll for a decision task: #{error.inspect}")
+        Cadence.logger.error('Unable to poll for a decision task', error: error.inspect)
         nil
       end
 

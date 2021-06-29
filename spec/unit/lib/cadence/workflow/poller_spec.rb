@@ -161,7 +161,7 @@ describe Cadence::Workflow::Poller do
 
         expect(Cadence.logger)
           .to have_received(:error)
-          .with('Unable to poll for a decision task: #<StandardError: StandardError>')
+          .with('Unable to poll for a decision task', error: '#<StandardError: StandardError>')
       end
     end
   end
