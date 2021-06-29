@@ -30,6 +30,7 @@ describe Cadence::Activity::TaskProcessor do
         .with(Cadence::Metadata::ACTIVITY_TYPE, task, domain)
         .and_return(metadata)
       allow(Cadence::Activity::Context).to receive(:new).with(connection, metadata).and_return(context)
+      allow(Cadence::ErrorHandler).to receive(:handle)
 
       allow(connection).to receive(:respond_activity_task_completed)
       allow(connection).to receive(:respond_activity_task_failed)
@@ -158,9 +159,14 @@ describe Cadence::Activity::TaskProcessor do
         it 'ignores connection exception' do
           allow(connection)
             .to receive(:respond_activity_task_failed)
-            .and_raise(StandardError)
+            .and_raise(StandardError, 'connection failure')
 
           subject.process
+
+          expect(Cadence::ErrorHandler)
+            .to have_received(:handle)
+            .twice
+            .with(StandardError, metadata: metadata)
         end
 
         it 'sends queue_time metric' do
@@ -177,6 +183,14 @@ describe Cadence::Activity::TaskProcessor do
           expect(Cadence.metrics)
             .to have_received(:timing)
             .with('activity_task.latency', an_instance_of(Integer), activity: activity_name)
+        end
+
+        it 'calls error handlers' do
+          subject.process
+
+          expect(Cadence::ErrorHandler)
+            .to have_received(:handle)
+            .with(exception, metadata: metadata)
         end
 
         context 'with ScriptError exception' do
