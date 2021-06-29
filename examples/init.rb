@@ -14,4 +14,7 @@ Cadence.configure do |config|
   config.domain = 'ruby-samples'
   config.task_list = 'general'
   config.metrics_adapter = Cadence::MetricsAdapters::Log.new(metrics_logger)
+  config.on_error do |error, _metadata|
+    puts "[ERROR HANDLER] #{error.inspect}"
+  end
 end
