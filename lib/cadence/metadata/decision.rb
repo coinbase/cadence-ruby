@@ -20,6 +20,17 @@ module Cadence
       def decision?
         true
       end
+
+      def to_h
+        {
+          domain: domain,
+          decision_task_id: id,
+          workflow_name: workflow_name,
+          workflow_id: workflow_id,
+          workflow_run_id: workflow_run_id,
+          attempt: attempt
+        }
+      end
     end
   end
 end

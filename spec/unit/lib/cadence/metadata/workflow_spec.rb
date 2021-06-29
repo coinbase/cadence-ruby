@@ -1,10 +1,10 @@
 require 'cadence/metadata/workflow'
 
 describe Cadence::Metadata::Workflow do
-  describe '#initialize' do
-    subject { described_class.new(args.to_h) }
-    let(:args) { Fabricate(:workflow_metadata) }
+  subject { described_class.new(args.to_h) }
+  let(:args) { Fabricate(:workflow_metadata) }
 
+  describe '#initialize' do
     it 'sets the attributes' do
       expect(subject.name).to eq(args.name)
       expect(subject.run_id).to eq(args.run_id)
@@ -17,5 +17,15 @@ describe Cadence::Metadata::Workflow do
     it { is_expected.not_to be_activity }
     it { is_expected.not_to be_decision }
     it { is_expected.to be_workflow }
+  end
+
+  describe '#to_h' do
+    it 'returns a hash' do
+      expect(subject.to_h).to eq(
+        attempt: subject.attempt,
+        workflow_name: subject.name,
+        workflow_run_id: subject.run_id
+      )
+    end
   end
 end
