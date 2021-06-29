@@ -1,4 +1,4 @@
-require 'logger'
+require 'cadence/logger'
 require 'cadence/metrics_adapters/null'
 
 module Cadence
@@ -24,7 +24,7 @@ module Cadence
 
     def initialize
       @connection_type = :thrift
-      @logger = Logger.new(STDOUT, progname: 'cadence_client')
+      @logger = Cadence::Logger.new(STDOUT, progname: 'cadence_client')
       @metrics_adapter = MetricsAdapters::Null.new
       @timeouts = DEFAULT_TIMEOUTS
       @domain = DEFAULT_DOMAIN
