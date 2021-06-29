@@ -1,6 +1,7 @@
 require 'securerandom'
 require 'cadence/testing/local_workflow_context'
 require 'cadence/testing/workflow_execution'
+require 'cadence/metadata/workflow'
 
 module Cadence
   module Testing
@@ -25,8 +26,14 @@ module Cadence
         workflow_id = SecureRandom.uuid
         run_id = SecureRandom.uuid
         execution = WorkflowExecution.new
+        metadata = Cadence::Metadata::Workflow.new(
+          name: workflow_id,
+          run_id: run_id,
+          attempt: 1,
+          timeouts: {}
+        )
         context = Cadence::Testing::LocalWorkflowContext.new(
-          execution, workflow_id, run_id, disabled_releases
+          execution, workflow_id, run_id, disabled_releases, metadata
         )
 
         execute_in_context(context, input)

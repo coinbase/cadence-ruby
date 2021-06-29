@@ -15,6 +15,8 @@ require 'cadence/workflow/state_manager'
 module Cadence
   class Workflow
     class Context
+      attr_reader :metadata
+
       def initialize(state_manager, dispatcher, metadata, config)
         @state_manager = state_manager
         @dispatcher = dispatcher
@@ -244,7 +246,7 @@ module Cadence
 
       private
 
-      attr_reader :state_manager, :dispatcher, :metadata, :config
+      attr_reader :state_manager, :dispatcher, :config
 
       def schedule_decision(decision)
         state_manager.schedule(decision)
