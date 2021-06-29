@@ -4,4 +4,4 @@ require_relative '../init'
 domain, workflow_id, run_id = ARGV
 
 run_id = Cadence.reset_workflow(domain, workflow_id, run_id)
-Cadence.logger.info "Reset workflow: #{run_id}"
+Cadence.logger.info 'Workflow workflow', workflow_id: workflow_id, new_run_id: run_id

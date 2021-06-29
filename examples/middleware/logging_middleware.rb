@@ -4,14 +4,15 @@ class LoggingMiddleware
   end
 
   def call(metadata)
+    type = type_from(metadata)
     entity_name = name_from(metadata)
-    Cadence.logger.info("[#{app_name}]: Started #{entity_name}")
+    Cadence.logger.debug("[#{app_name}]: #{type} for #{entity_name} started")
 
     yield
 
-    Cadence.logger.info("[#{app_name}]: Finished #{entity_name}")
+    Cadence.logger.debug("[#{app_name}]: #{type} for #{entity_name} finished")
   rescue StandardError => e
-    Cadence.logger.error("[#{app_name}]: Error #{entity_name}")
+    Cadence.logger.error("[#{app_name}]: #{type} for #{entity_name} error")
 
     raise
   end
@@ -19,6 +20,14 @@ class LoggingMiddleware
   private
 
   attr_reader :app_name
+
+  def type_from(metadata)
+    if metadata.activity?
+      'Activity task'
+    elsif metadata.decision?
+      'Decision task'
+    end
+  end
 
   def name_from(metadata)
     if metadata.activity?

@@ -11,17 +11,17 @@ module Cadence
       end
 
       SEVERITIES.each do |severity|
-        define_method severity do |message|
+        define_method severity do |message, details = {}|
           return if replay?
 
-          main_logger.public_send(severity, message)
+          main_logger.public_send(severity, message, details)
         end
       end
 
-      def log(severity, message)
+      def log(severity, message, details = {})
         return if replay?
 
-        main_logger.log(severity, message)
+        main_logger.log(severity, message, details)
       end
 
       private
