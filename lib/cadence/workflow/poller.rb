@@ -1,5 +1,6 @@
 require 'cadence/connection'
 require 'cadence/thread_pool'
+require 'cadence/error_handler'
 require 'cadence/middleware/chain'
 require 'cadence/workflow/decision_task_processor'
 
@@ -72,6 +73,8 @@ module Cadence
         connection.poll_for_decision_task(domain: domain, task_list: task_list)
       rescue StandardError => error
         Cadence.logger.error("Unable to poll for a decision task: #{error.inspect}")
+        Cadence::ErrorHandler.handle(error)
+
         nil
       end
 

@@ -1,6 +1,7 @@
 require 'securerandom'
 require 'cadence/activity/async_token'
 require 'cadence/workflow/execution_info'
+require 'cadence/metadata/workflow'
 require 'cadence/testing/workflow_execution'
 require 'cadence/testing/local_workflow_context'
 
@@ -72,9 +73,17 @@ module Cadence
         executions[[workflow_id, run_id]] = execution
 
         execution_options = ExecutionOptions.new(workflow, options)
-        headers = execution_options.headers
+
+        metadata = Cadence::Metadata::Workflow.new(
+          name: workflow_id,
+          run_id: run_id,
+          attempt: 1,
+          timeouts: {},
+          headers: execution_options.headers
+        )
+
         context = Cadence::Testing::LocalWorkflowContext.new(
-          execution, workflow_id, run_id, workflow.disabled_releases, headers
+          execution, workflow_id, run_id, workflow.disabled_releases, metadata
         )
 
         execution.run do

@@ -6,7 +6,7 @@ module Cadence
     Connection = Struct.new(:type, :host, :port, keyword_init: true)
     Execution = Struct.new(:domain, :task_list, :timeouts, :headers, keyword_init: true)
 
-    attr_reader :timeouts
+    attr_reader :timeouts, :error_handlers
     attr_accessor :connection_type, :host, :port, :logger, :metrics_adapter, :domain, :task_list, :headers
 
     DEFAULT_TIMEOUTS = {
@@ -30,10 +30,15 @@ module Cadence
       @domain = DEFAULT_DOMAIN
       @task_list = DEFAULT_TASK_LIST
       @headers = DEFAULT_HEADERS
+      @error_handlers = []
     end
 
     def timeouts=(new_timeouts)
       @timeouts = DEFAULT_TIMEOUTS.merge(new_timeouts)
+    end
+
+    def on_error(&block)
+      @error_handlers << block
     end
 
     def for_connection

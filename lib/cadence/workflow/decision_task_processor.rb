@@ -2,6 +2,7 @@ require 'cadence/workflow/executor'
 require 'cadence/workflow/history'
 require 'cadence/workflow/serializer'
 require 'cadence/metadata'
+require 'cadence/error_handler'
 
 module Cadence
   class Workflow
@@ -11,6 +12,7 @@ module Cadence
       def initialize(task, domain, workflow_lookup, middleware_chain, config)
         @task = task
         @domain = domain
+        @metadata = Metadata.generate(Metadata::DECISION_TYPE, task, domain)
         @task_token = task.taskToken
         @workflow_name = task.workflowType.name
         @workflow_class = workflow_lookup.find(workflow_name)
@@ -32,7 +34,6 @@ module Cadence
         history = fetch_full_history
         # TODO: For sticky workflows we need to cache the Executor instance
         executor = Workflow::Executor.new(workflow_class, history, config)
-        metadata = Metadata.generate(Metadata::DECISION_TYPE, task, domain)
 
         decisions = middleware_chain.invoke(metadata) do
           executor.run
@@ -42,6 +43,7 @@ module Cadence
       rescue StandardError => error
         fail_task(error.inspect)
         Cadence.logger.debug(error.backtrace.join("\n"))
+        Cadence::ErrorHandler.handle(error, metadata: metadata)
       ensure
         time_diff_ms = ((Time.now - start_time) * 1000).round
         Cadence.metrics.timing('decision_task.latency', time_diff_ms, workflow: workflow_name)
@@ -51,7 +53,7 @@ module Cadence
       private
 
       attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class,
-        :middleware_chain, :config
+        :middleware_chain, :config, :metadata
 
       def connection
         @connection ||= Cadence::Connection.generate(config.for_connection)
@@ -91,6 +93,9 @@ module Cadence
           task_token: task_token,
           decisions: serialize_decisions(decisions)
         )
+      rescue StandardError => error
+        Cadence.logger.error("Unable to complete Decision task #{workflow_name}: #{error.inspect}")
+        Cadence::ErrorHandler.handle(error, metadata: metadata)
       end
 
       def fail_task(message)
@@ -104,6 +109,9 @@ module Cadence
           cause: CadenceThrift::DecisionTaskFailedCause::UNHANDLED_DECISION,
           details: message
         )
+      rescue StandardError => error
+        Cadence.logger.error("Unable to fail Decision task #{workflow_name}: #{error.inspect}")
+        Cadence::ErrorHandler.handle(error, metadata: metadata)
       end
     end
   end

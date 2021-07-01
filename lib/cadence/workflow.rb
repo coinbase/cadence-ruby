@@ -1,6 +1,7 @@
 require 'cadence/concerns/executable'
 require 'cadence/workflow/convenience_methods'
 require 'cadence/thread_local_context'
+require 'cadence/error_handler'
 
 module Cadence
   class Workflow
@@ -17,6 +18,8 @@ module Cadence
     rescue StandardError, ScriptError => error
       Cadence.logger.error("Workflow execution failed with: #{error.inspect}")
       Cadence.logger.debug(error.backtrace.join("\n"))
+
+      Cadence::ErrorHandler.handle(error, metadata: context.metadata)
 
       context.fail(error.class.name, error.message)
     end

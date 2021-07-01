@@ -1,5 +1,6 @@
 require 'cadence/workflow/decision_task_processor'
 require 'cadence/workflow'
+require 'cadence/metadata'
 require 'cadence/executable_lookup'
 require 'cadence/connection/thrift'
 require 'cadence/middleware/chain'
@@ -20,6 +21,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
       respond_decision_task_failed: nil
     )
   end
+  let(:metadata) { Cadence::Metadata.generate(Cadence::Metadata::DECISION_TYPE, task, domain) }
   let(:middleware_chain) { Cadence::Middleware::Chain.new }
   let(:executor) { instance_double(Cadence::Workflow::Executor, run: []) }
   let(:config) { Cadence::Configuration.new }
@@ -33,6 +35,12 @@ describe Cadence::Workflow::DecisionTaskProcessor do
     allow(Cadence.logger).to receive(:info)
     allow(Cadence.logger).to receive(:error)
     allow(Cadence.logger).to receive(:debug)
+    allow(Cadence::ErrorHandler).to receive(:handle)
+
+    allow(Cadence::Metadata)
+      .to receive(:generate)
+      .with(Cadence::Metadata::DECISION_TYPE, task, domain)
+      .and_return(metadata)
   end
 
   context 'when workflow is registered' do
@@ -143,7 +151,15 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
         expect(Cadence.logger)
           .to have_received(:error)
-          .with("Decision task for TestWorkflow failed with: #<StandardError: Host unreachable>")
+          .with("Unable to complete Decision task TestWorkflow: #<StandardError: Host unreachable>")
+      end
+
+      it 'calls error handlers' do
+        subject.process
+
+        expect(Cadence::ErrorHandler)
+          .to have_received(:handle)
+          .with(StandardError, metadata: metadata)
       end
     end
   end
