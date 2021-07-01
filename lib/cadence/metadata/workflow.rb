@@ -18,6 +18,14 @@ module Cadence
       def workflow?
         true
       end
+
+      def to_h
+        {
+          workflow_name: name,
+          workflow_run_id: run_id,
+          attempt: attempt
+        }
+      end
     end
   end
 end

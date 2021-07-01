@@ -23,6 +23,18 @@ module Cadence
       def activity?
         true
       end
+
+      def to_h
+        {
+          domain: domain,
+          workflow_id: workflow_id,
+          workflow_name: workflow_name,
+          workflow_run_id: workflow_run_id,
+          activity_id: id,
+          activity_name: name,
+          attempt: attempt
+        }
+      end
     end
   end
 end
