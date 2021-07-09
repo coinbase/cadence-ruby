@@ -1,5 +1,7 @@
 # Ruby worker for Cadence
 
+[![Coverage Status](https://coveralls.io/repos/github/coinbase/cadence-ruby/badge.svg?branch=master)](https://coveralls.io/github/coinbase/cadence-ruby?branch=master)
+
 <img src="./assets/cadence_logo_2.png" width="250" align="right" alt="Cadence" />
 
 A pure Ruby library for defining and running Cadence workflows and activities.
