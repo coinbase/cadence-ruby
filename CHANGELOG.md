@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6
+- Add Metadata::Base#to_h for uniform metadata
+- Implement hooks for Error handling
+- Add Coveralls
+- Update RBI file to cover all classes and methods
+
 ## 0.1.5
 - Implement strategies for resetting workflows
 
