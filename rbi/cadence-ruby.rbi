@@ -73,6 +73,7 @@ class Cadence::Configuration::Execution < Struct
   def timeouts; end
   def timeouts=(_); end
 end
+class Cadence::Worker; end
 module Cadence::Concerns
 end
 module Cadence::Concerns::Executable
