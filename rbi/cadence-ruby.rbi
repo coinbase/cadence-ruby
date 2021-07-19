@@ -529,8 +529,8 @@ class Cadence::Metadata::Activity < Cadence::Metadata::Base
 
   def id; end
 
-  def initialize(domain:, id:, name:, task_token:, attempt:, workflow_run_id:, workflow_id:, workflow_name:, timeouts:, headers: nil);
- end
+  def initialize(domain:, id:, name:, task_token:, attempt:, workflow_run_id:, workflow_id:, workflow_name:, timeouts:, headers: nil)
+  end
 
   def name; end
 
@@ -780,4 +780,32 @@ module Cadence::Testing::WorkflowOverride
   def disabled_releases; end
 
   def execute_locally(*input); end
+end
+
+module CadenceThrift
+  class BadRequestError; end
+
+  class InternalServiceError; end
+
+  class DomainAlreadyExistsError; end
+
+  class WorkflowExecutionAlreadyStartedError; end
+
+  class EntityNotExistsError; end
+
+  class ServiceBusyError; end
+
+  class CancellationAlreadyRequestedError; end
+
+  class QueryFailedError; end
+
+  class DomainNotActiveError; end
+
+  class LimitExceededError; end
+
+  class AccessDeniedError; end
+
+  class RetryTaskError; end
+
+  class ClientVersionNotSupportedError; end
 end
