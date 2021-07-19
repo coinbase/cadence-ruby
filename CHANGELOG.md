@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.7
+- Update RBI file to remove Thrift methods
+
 ## 0.1.6
 - Add Metadata::Base#to_h for uniform metadata
 - Implement hooks for Error handling
