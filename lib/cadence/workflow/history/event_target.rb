@@ -17,10 +17,12 @@ module Cadence
         WORKFLOW_TYPE                         = :workflow
         CANCEL_WORKFLOW_REQUEST_TYPE          = :cancel_workflow_request
 
+        # NOTE: The order is important, first prefix match wins (will be a longer match)
         TARGET_TYPES = {
-          'ActivityTask'                           => ACTIVITY_TYPE,
           'ActivityTaskCancel'                     => CANCEL_ACTIVITY_REQUEST_TYPE,
+          'ActivityTask'                           => ACTIVITY_TYPE,
           'RequestCancelActivityTask'              => CANCEL_ACTIVITY_REQUEST_TYPE,
+          'TimerCanceled'                          => CANCEL_TIMER_REQUEST_TYPE,
           'Timer'                                  => TIMER_TYPE,
           'CancelTimer'                            => CANCEL_TIMER_REQUEST_TYPE,
           'ChildWorkflowExecution'                 => CHILD_WORKFLOW_TYPE,
@@ -31,8 +33,8 @@ module Cadence
           'ExternalWorkflowExecutionCancel'        => CANCEL_EXTERNAL_WORKFLOW_REQUEST_TYPE,
           'RequestCancelExternalWorkflowExecution' => CANCEL_EXTERNAL_WORKFLOW_REQUEST_TYPE,
           'UpsertWorkflowSearchAttributes'         => WORKFLOW_TYPE,
-          'WorkflowExecution'                      => WORKFLOW_TYPE,
           'WorkflowExecutionCancel'                => CANCEL_WORKFLOW_REQUEST_TYPE,
+          'WorkflowExecution'                      => WORKFLOW_TYPE,
         }.freeze
 
         attr_reader :id, :type
