@@ -155,6 +155,7 @@ module Cadence
 
         when 'RequestCancelActivityTaskFailed'
           state_machine.fail
+          discard_decision(target)
           dispatch(target, 'failed', event.attributes.cause, nil)
 
         when 'ActivityTaskCanceled'
@@ -171,10 +172,12 @@ module Cadence
 
         when 'CancelTimerFailed'
           state_machine.failed
+          discard_decision(target)
           dispatch(target, 'failed', event.attributes.cause, nil)
 
         when 'TimerCanceled'
           state_machine.cancel
+          discard_decision(target)
           dispatch(target, 'canceled')
 
         when 'WorkflowExecutionCancelRequested'
