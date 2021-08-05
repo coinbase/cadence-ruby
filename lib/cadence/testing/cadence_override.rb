@@ -38,7 +38,7 @@ module Cadence
         details = Activity::AsyncToken.decode(async_token)
         execution = executions[[details.workflow_id, details.run_id]]
 
-        execution.complete_activity(details.activity_id, result)
+        execution.complete_future(details.activity_id, result)
       end
 
       def fail_activity(async_token, error)
@@ -47,7 +47,7 @@ module Cadence
         details = Activity::AsyncToken.decode(async_token)
         execution = executions[[details.workflow_id, details.run_id]]
 
-        execution.fail_activity(details.activity_id, error)
+        execution.fail_future(details.activity_id, error)
       end
 
       private

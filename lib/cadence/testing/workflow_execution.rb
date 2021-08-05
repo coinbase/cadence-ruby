@@ -26,12 +26,12 @@ module Cadence
         futures.register(id, future)
       end
 
-      def complete_activity(id, result)
+      def complete_future(id, result = nil)
         futures.complete(id, result)
         resume
       end
 
-      def fail_activity(id, error)
+      def fail_future(id, error)
         futures.fail(id, error)
         resume
       end
