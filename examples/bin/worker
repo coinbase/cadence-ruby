@@ -11,6 +11,7 @@ worker = Cadence::Worker.new(polling_ttl: 10, thread_pool_size: 20)
 
 worker.register_workflow(AsyncActivityWorkflow)
 worker.register_workflow(AsyncHelloWorldWorkflow)
+worker.register_workflow(AsyncTimerWorkflow)
 worker.register_workflow(BranchingWorkflow)
 worker.register_workflow(CancellingTimerWorkflow)
 worker.register_workflow(CheckWorkflow)
