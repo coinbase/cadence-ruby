@@ -5,18 +5,18 @@ module Cadence
         @store = {}
       end
 
-      def register(token, future)
-        raise 'already registered' if store.key?(token)
+      def register(id, future)
+        raise 'already registered' if store.key?(id.to_s)
 
-        store[token] = future
+        store[id.to_s] = future
       end
 
-      def complete(token, result)
-        store[token].set(result)
+      def complete(id, result)
+        store[id.to_s].set(result)
       end
 
-      def fail(token, error)
-        store[token].fail(error.class.name, error.message)
+      def fail(id, error)
+        store[id.to_s].fail(error.class.name, error.message)
       end
 
       private

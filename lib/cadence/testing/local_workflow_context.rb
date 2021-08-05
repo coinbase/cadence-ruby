@@ -64,7 +64,7 @@ module Cadence
         result = activity_class.execute_in_context(context, input)
 
         if context.async?
-          execution.register_future(context.async_token, future)
+          execution.register_future(activity_id, future)
         else
           # Fulfil the future straigt away for non-async activities
           future.set(result)
