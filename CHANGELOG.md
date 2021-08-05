@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+- Fix issue with incorrect timer cancellation under certain circumstances
+- Implement testing mode support for async timers
+
 ## 0.1.7
 - Update RBI file to remove Thrift methods
 
