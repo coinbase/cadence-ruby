@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'cadence/thread_local_context'
 require 'cadence/activity/async_token'
 require 'cadence/workflow/execution_info'
 require 'cadence/metadata/workflow'
@@ -97,6 +98,8 @@ module Cadence
         context = Cadence::Testing::LocalWorkflowContext.new(
           execution, workflow_id, run_id, workflow.disabled_releases, metadata
         )
+
+        Cadence::ThreadLocalContext.set(context)
 
         execution.run do
           workflow.execute_in_context(context, input)

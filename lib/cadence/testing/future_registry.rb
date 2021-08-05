@@ -12,7 +12,9 @@ module Cadence
       end
 
       def complete(id, result)
-        store[id.to_s].set(result)
+        future = store[id.to_s]
+        future.set(result)
+        future.callbacks.each { |callback| callback.call(result) }
       end
 
       def fail(id, error)

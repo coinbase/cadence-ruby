@@ -16,4 +16,14 @@ describe AsyncTimerWorkflow do
 
     expect(info.status).to eq(Cadence::Workflow::ExecutionInfo::COMPLETED_STATUS)
   end
+
+  it 'executes HelloWorldActivity' do
+    expect_any_instance_of(HelloWorldActivity)
+      .to receive(:execute)
+      .with('timer')
+      .and_call_original
+
+    run_id = Cadence.start_workflow(described_class, options: { workflow_id: workflow_id })
+    Cadence.fire_timer(workflow_id, run_id, 1)
+  end
 end

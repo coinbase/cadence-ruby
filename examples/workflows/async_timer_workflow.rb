@@ -1,9 +1,12 @@
-require 'activities/async_activity'
+require 'activities/hello_world_activity'
 
 class AsyncTimerWorkflow < Cadence::Workflow
   def execute
     timer = workflow.start_timer(30)
-    timer.done { logger.info('Timer fired!') }
+    timer.done do
+      logger.info('Timer fired!')
+      HelloWorldActivity.execute!('timer')
+    end
 
     workflow.wait_for(timer)
   end

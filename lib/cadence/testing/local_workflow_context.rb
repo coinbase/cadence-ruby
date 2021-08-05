@@ -68,6 +68,7 @@ module Cadence
         else
           # Fulfil the future straigt away for non-async activities
           future.set(result)
+          future.callbacks.each { |callback| callback.call(result) }
         end
 
         future
