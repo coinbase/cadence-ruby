@@ -8,6 +8,11 @@ require 'cadence/testing/local_workflow_context'
 module Cadence
   module Testing
     module CadenceOverride
+      def self.prepended(_mod)
+        # Allow firing timers in testing mode via Cadence API
+        Cadence.def_delegators(:default_client, :fire_timer)
+      end
+
       def start_workflow(workflow, *input, **args)
         return super if Cadence::Testing.disabled?
 
@@ -48,6 +53,13 @@ module Cadence
         execution = executions[[details.workflow_id, details.run_id]]
 
         execution.fail_future(details.activity_id, error)
+      end
+
+      # This method is only available in teesting mode
+      def fire_timer(workflow_id, run_id, timer_id)
+        execution = executions[[workflow_id, run_id]]
+
+        execution.complete_future(timer_id)
       end
 
       private

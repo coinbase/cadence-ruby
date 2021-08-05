@@ -148,11 +148,17 @@ module Cadence
       end
 
       def start_timer(timeout, timer_id = nil)
-        raise NotImplementedError, 'not yet available for testing'
+        event_id = next_event_id
+        timer_id ||= event_id
+
+        target = Workflow::History::EventTarget.new(event_id, Workflow::History::EventTarget::TIMER_TYPE)
+        future = Workflow::Future.new(target, self, cancelation_id: timer_id)
+
+        execution.register_future(timer_id, future)
       end
 
       def cancel_timer(timer_id)
-        raise NotImplementedError, 'not yet available for testing'
+        execution.fail_future(timer_id, RuntimeError.new('timer canceled'))
       end
 
       def complete(result = nil)
