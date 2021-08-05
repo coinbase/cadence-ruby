@@ -195,7 +195,14 @@ module Cadence
       end
 
       def cancel(target, cancelation_id)
-        raise NotImplementedError, 'not yet available for testing'
+        case target.type
+        when Workflow::History::EventTarget::ACTIVITY_TYPE
+          cancel_activity(cancelation_id)
+        when Workflow::History::EventTarget::TIMER_TYPE
+          cancel_timer(cancelation_id)
+        else
+          raise "#{target} can not be canceled"
+        end
       end
 
       private
