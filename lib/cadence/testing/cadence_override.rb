@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'cadence/thread_local_context'
 require 'cadence/activity/async_token'
 require 'cadence/workflow/execution_info'
 require 'cadence/metadata/workflow'
@@ -8,6 +9,11 @@ require 'cadence/testing/local_workflow_context'
 module Cadence
   module Testing
     module CadenceOverride
+      def self.prepended(_mod)
+        # Allow firing timers in testing mode via Cadence API
+        Cadence.def_delegators(:default_client, :fire_timer)
+      end
+
       def start_workflow(workflow, *input, **args)
         return super if Cadence::Testing.disabled?
 
@@ -38,7 +44,7 @@ module Cadence
         details = Activity::AsyncToken.decode(async_token)
         execution = executions[[details.workflow_id, details.run_id]]
 
-        execution.complete_activity(async_token, result)
+        execution.complete_future(details.activity_id, result)
       end
 
       def fail_activity(async_token, error)
@@ -47,7 +53,14 @@ module Cadence
         details = Activity::AsyncToken.decode(async_token)
         execution = executions[[details.workflow_id, details.run_id]]
 
-        execution.fail_activity(async_token, error)
+        execution.fail_future(details.activity_id, error)
+      end
+
+      # This method is only available in teesting mode
+      def fire_timer(workflow_id, run_id, timer_id)
+        execution = executions[[workflow_id, run_id]]
+
+        execution.complete_future(timer_id)
       end
 
       private
@@ -85,6 +98,8 @@ module Cadence
         context = Cadence::Testing::LocalWorkflowContext.new(
           execution, workflow_id, run_id, workflow.disabled_releases, metadata
         )
+
+        Cadence::ThreadLocalContext.set(context)
 
         execution.run do
           workflow.execute_in_context(context, input)
