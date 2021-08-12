@@ -38,7 +38,7 @@ describe Cadence::Workflow::History::Event do
     context 'when event is TimerCanceled' do
       let(:raw_event) { Fabricate(:timer_canceled_event_thrift, eventId: 42) }
 
-      it { is_expected.to eq(raw_event.timerCanceledEventAttributes.startedEventId) }
+      it { is_expected.to eq(raw_event.eventId) }
     end
   end
 end
