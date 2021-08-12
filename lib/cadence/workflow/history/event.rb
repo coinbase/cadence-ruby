@@ -45,7 +45,7 @@ module Cadence
         # referred to as a "decision" event. Not related to DecisionTask.
         def decision_id
           case type
-          when 'TimerFired', 'TimerCanceled'
+          when 'TimerFired'
             attributes.startedEventId
           when 'WorkflowExecutionSignaled'
             1 # fixed id for everything related to current workflow
