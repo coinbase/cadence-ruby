@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.9
+- Fix regression with non-deterministic timer cancellation
+
 ## 0.1.8
 - Fix issue with incorrect timer cancellation under certain circumstances
 - Implement testing mode support for async timers
