@@ -17,11 +17,48 @@ jobs:
   test_examples:
     docker:
       - image: circleci/ruby:2.6.3-stretch-node
+      - image: circleci/postgres:alpine
+        name: postgres
+        environment:
+          POSTGRES_PASSWORD: cadence
+      - image: ubercadence/server:master-auto-setup
+        name: cadence
+        environment:
+          DB: postgres
+          DB_PORT: 5432
+          POSTGRES_USER: postgres
+          POSTGRES_PWD: cadence
+          POSTGRES_SEEDS: postgres
+          DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development.yaml
+      - image: antstorm/cadence-tchannel-proxy:latest
+        name: proxy
+        environment:
+          BIND_ADDRESS: 0.0.0.0:6666
+          CADENCE_ADDRESS: cadence:7933
+
+    environment:
+      CADENCE_HOST: proxy
+      CADENCE_PORT: 6666
+
     steps:
       - checkout
       - run:
           name: Bundle Install
           command: cd examples && bundle install --path vendor/bundle
+
+      - run:
+          name: Register Domain
+          command: cd examples && bin/register_domain ruby-samples
+
+      - run:
+          name: Wait for Domain to settle
+          command: sleep 15
+
+      - run:
+          name: Boot up worker
+          command: cd examples && bin/worker
+          background: true
+
       - run:
           name: Run RSpec
           command: cd examples && bundle exec rspec
