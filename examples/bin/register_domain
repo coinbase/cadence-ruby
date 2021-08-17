@@ -6,4 +6,9 @@ description = ARGV[1]
 
 fail 'Missing domain name, please run register_domain <domain_name>' unless domain
 
-Cadence.register_domain(domain, description)
+begin
+  Cadence.register_domain(domain, description)
+  Cadence.logger.info "Domain #{domain} created"
+rescue CadenceThrift::DomainAlreadyExistsError
+  Cadence.logger.info "Domain #{domain} already exists"
+end
