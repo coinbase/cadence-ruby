@@ -4,6 +4,7 @@ require 'cadence/workflow/dispatcher'
 require 'cadence/workflow/state_manager'
 require 'cadence/workflow/context'
 require 'cadence/workflow/history/event_target'
+require 'cadence/metadata'
 
 module Cadence
   class Workflow
@@ -34,7 +35,8 @@ module Cadence
 
       attr_reader :workflow_class, :dispatcher, :state_manager, :history, :config
 
-      def execute_workflow(input, metadata)
+      def execute_workflow(input, workflow_started_event_attributes)
+        metadata = Metadata.generate(Metadata::WORKFLOW_TYPE, workflow_started_event_attributes)
         context = Workflow::Context.new(state_manager, dispatcher, metadata, config)
 
         Fiber.new do
