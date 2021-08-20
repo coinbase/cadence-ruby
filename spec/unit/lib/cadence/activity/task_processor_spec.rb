@@ -10,7 +10,7 @@ describe Cadence::Activity::TaskProcessor do
   let(:task) do
     Fabricate(:activity_task_thrift, activity_name: activity_name, input: Cadence::JSON.serialize(input))
   end
-  let(:metadata) { Cadence::Metadata.generate(Cadence::Metadata::ACTIVITY_TYPE, task) }
+  let(:metadata) { Cadence::Metadata.generate(Cadence::Metadata::ACTIVITY_TYPE, task, domain) }
   let(:activity_name) { 'TestActivity' }
   let(:connection) { instance_double('Cadence::Connection::Thrift') }
   let(:middleware_chain) { Cadence::Middleware::Chain.new }
