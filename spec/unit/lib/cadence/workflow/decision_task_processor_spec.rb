@@ -49,7 +49,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
       allow(Cadence::Workflow::Executor)
         .to receive(:new)
-        .with(TestWorkflow, an_instance_of(Cadence::Workflow::History), config)
+        .with(TestWorkflow, an_instance_of(Cadence::Workflow::History), metadata, config)
         .and_return(executor)
     end
 

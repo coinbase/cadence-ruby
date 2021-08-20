@@ -10,6 +10,8 @@ describe Cadence::Workflow::Context do
     let(:dispatcher) { Cadence::Workflow::Dispatcher.new }
     let(:metadata_hash) do
       {
+        domain: 'test-domain',
+        id: SecureRandom.uuid,
         name: 'TestWorkflow',
         run_id: SecureRandom.uuid,
         attempt: 0,

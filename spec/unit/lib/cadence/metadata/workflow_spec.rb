@@ -6,6 +6,8 @@ describe Cadence::Metadata::Workflow do
 
   describe '#initialize' do
     it 'sets the attributes' do
+      expect(subject.domain).to eq(args.domain)
+      expect(subject.id).to eq(args.id)
       expect(subject.name).to eq(args.name)
       expect(subject.run_id).to eq(args.run_id)
       expect(subject.attempt).to eq(args.attempt)
@@ -22,6 +24,8 @@ describe Cadence::Metadata::Workflow do
   describe '#to_h' do
     it 'returns a hash' do
       expect(subject.to_h).to eq(
+        domain: subject.domain,
+        workflow_id: subject.id,
         attempt: subject.attempt,
         workflow_name: subject.name,
         workflow_run_id: subject.run_id

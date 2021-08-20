@@ -33,7 +33,7 @@ module Cadence
 
         history = fetch_full_history
         # TODO: For sticky workflows we need to cache the Executor instance
-        executor = Workflow::Executor.new(workflow_class, history, config)
+        executor = Workflow::Executor.new(workflow_class, history, metadata, config)
 
         decisions = middleware_chain.invoke(metadata) do
           executor.run

@@ -58,6 +58,8 @@ module Cadence
 
       def workflow_metadata_from(event)
         Metadata::Workflow.new(
+          domain: nil,
+          id: nil,
           name: event.workflowType.name,
           run_id: event.originalExecutionRunId,
           attempt: event.attempt,
