@@ -88,7 +88,9 @@ module Cadence
         execution_options = ExecutionOptions.new(workflow, options)
 
         metadata = Cadence::Metadata::Workflow.new(
-          name: workflow_id,
+          domain: execution_options.domain,
+          id: workflow_id,
+          name: execution_options.name,
           run_id: run_id,
           attempt: 1,
           timeouts: {},

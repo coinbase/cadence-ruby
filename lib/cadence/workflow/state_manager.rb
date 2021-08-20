@@ -3,7 +3,6 @@ require 'cadence/errors'
 require 'cadence/workflow/decision'
 require 'cadence/workflow/decision_state_machine'
 require 'cadence/workflow/history/event_target'
-require 'cadence/metadata'
 
 module Cadence
   class Workflow
@@ -102,7 +101,7 @@ module Cadence
             History::EventTarget.workflow,
             'started',
             safe_parse(event.attributes.input),
-            Metadata.generate(Metadata::WORKFLOW_TYPE, event.attributes)
+            event.attributes
           )
 
         when 'WorkflowExecutionCompleted'

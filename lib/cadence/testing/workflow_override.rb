@@ -27,7 +27,9 @@ module Cadence
         run_id = SecureRandom.uuid
         execution = WorkflowExecution.new
         metadata = Cadence::Metadata::Workflow.new(
-          name: workflow_id,
+          domain: nil,
+          id: workflow_id,
+          name: name, # Workflow class name
           run_id: run_id,
           attempt: 1,
           timeouts: {}

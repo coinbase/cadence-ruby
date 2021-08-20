@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.10
+- Add :id and :domain to workflow context's metadata
+
 ## 0.1.9
 - Fix regression with non-deterministic timer cancellation
 

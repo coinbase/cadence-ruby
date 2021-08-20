@@ -46,28 +46,6 @@ describe Cadence::Metadata do
       end
     end
 
-    context 'with workflow type' do
-      let(:type) { described_class::WORKFLOW_TYPE }
-      let(:data) { Fabricate(:worklfow_execution_started_event_attributes_thrift) }
-      let(:domain) { nil }
-
-      it 'generates metadata' do
-        expect(subject.run_id).to eq(data.originalExecutionRunId)
-        expect(subject.attempt).to eq(data.attempt)
-        expect(subject.headers).to eq({})
-      end
-
-      context 'with headers' do
-        let(:data) do
-          Fabricate(:worklfow_execution_started_event_attributes_thrift, headers: { 'Foo' => 'Bar' })
-        end
-
-        it 'assigns headers' do
-          expect(subject.headers).to eq('Foo' => 'Bar')
-        end
-      end
-    end
-
     context 'with unknown type' do
       let(:type) { :unknown }
       let(:data) { nil }
