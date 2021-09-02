@@ -64,7 +64,7 @@ module Cadence
       begin
         result = activity_class.execute_in_context(context, input)
       rescue StandardError, ScriptError => error
-        future.fail(error.class, error.message)
+        future.fail(error.class.name, error.message)
         return
       end
 
