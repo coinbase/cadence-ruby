@@ -61,7 +61,12 @@ module Cadence
         )
         context = LocalActivityContext.new(metadata)
 
-        result = activity_class.execute_in_context(context, input)
+        begin
+          result = activity_class.execute_in_context(context, input)
+        rescue StandardError, ScriptError => error
+          future.fail(error.class.name, error.message)
+          return future
+        end
 
         if context.async?
           execution.register_future(activity_id, future)
