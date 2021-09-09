@@ -1,4 +1,6 @@
 # Changelog
+## 0.1.11
+- Update Testing::LocalWorkflowContext execute_activity method to fail the future when the activity fails. 
 
 ## 0.1.10
 - Add :id and :domain to workflow context's metadata
