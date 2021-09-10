@@ -1,4 +1,6 @@
 # Changelog
+## 0.1.12
+- Revert 0.1.11 changes.
 ## 0.1.11
 - Update Testing::LocalWorkflowContext execute_activity method to fail the future when the activity fails. 
 
