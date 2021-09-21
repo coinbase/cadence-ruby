@@ -39,16 +39,18 @@ module Cadence
       end
 
       def complete_activity(async_token, result = nil)
-        return super if Cadence::Testing.disabled?
-
+	      return super if Cadence::Testing.disabled?
+        binding.pry
         details = Activity::AsyncToken.decode(async_token)
+
         execution = executions[[details.workflow_id, details.run_id]]
 
         execution.complete_future(details.activity_id, result)
       end
 
       def fail_activity(async_token, error)
-        return super if Cadence::Testing.disabled?
+        
+	      return super if Cadence::Testing.disabled?
 
         details = Activity::AsyncToken.decode(async_token)
         execution = executions[[details.workflow_id, details.run_id]]
@@ -58,6 +60,7 @@ module Cadence
 
       # This method is only available in teesting mode
       def fire_timer(workflow_id, run_id, timer_id)
+        
         execution = executions[[workflow_id, run_id]]
 
         execution.complete_future(timer_id)
@@ -71,6 +74,7 @@ module Cadence
 
       def start_locally(workflow, *input, **args)
         options = args.delete(:options) || {}
+        override = args.delete(:override) || false
         input << args unless args.empty?
 
         reuse_policy = options[:workflow_id_reuse_policy] || :allow_failed
@@ -84,8 +88,17 @@ module Cadence
 
         execution = WorkflowExecution.new
         executions[[workflow_id, run_id]] = execution
-
         execution_options = ExecutionOptions.new(workflow, options)
+
+        if override
+          context = Cadence::Testing::LocalWorkflowContext.new(
+            execution, workflow_id, run_id, workflow.disabled_releases, execution_options.headers
+          )
+          execution.run do
+            workflow.execute_in_context(context, input)
+          end
+          return run_id
+        end
 
         metadata = Cadence::Metadata::Workflow.new(
           domain: execution_options.domain,
@@ -101,7 +114,8 @@ module Cadence
           execution, workflow_id, run_id, workflow.disabled_releases, metadata
         )
 
-        Cadence::ThreadLocalContext.set(context)
+        
+        # Cadence::ThreadLocalContext.set(context)
 
         execution.run do
           workflow.execute_in_context(context, input)

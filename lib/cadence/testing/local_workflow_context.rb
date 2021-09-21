@@ -131,7 +131,7 @@ module Cadence
         # input << args unless args.empty?
 
         # execution = WorkflowExecution.new
-        # workflow_id = SecureRandom.uuid
+        # workflow_id = options[:workflow_id] || SecureRandom.uuid
         # run_id = SecureRandom.uuid
         # execution_options = ExecutionOptions.new(workflow_class, options)
         # context = Cadence::Testing::LocalWorkflowContext.new(

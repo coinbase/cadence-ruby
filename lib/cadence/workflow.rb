@@ -25,7 +25,7 @@ module Cadence
       context.fail(error.class.name, error.message)
     ensure
       # Reset back to previous context for child workflows
-      Cadence::ThreadLocalContext.set(previous_context)
+      Cadence::ThreadLocalContext.set(previous_context) if previous_context
     end
 
     def initialize(context)
