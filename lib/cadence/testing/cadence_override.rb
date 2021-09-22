@@ -39,18 +39,16 @@ module Cadence
       end
 
       def complete_activity(async_token, result = nil)
-	      return super if Cadence::Testing.disabled?
-        binding.pry
-        details = Activity::AsyncToken.decode(async_token)
+        return super if Cadence::Testing.disabled?
 
+        details = Activity::AsyncToken.decode(async_token)
         execution = executions[[details.workflow_id, details.run_id]]
 
         execution.complete_future(details.activity_id, result)
       end
 
       def fail_activity(async_token, error)
-        
-	      return super if Cadence::Testing.disabled?
+        return super if Cadence::Testing.disabled?
 
         details = Activity::AsyncToken.decode(async_token)
         execution = executions[[details.workflow_id, details.run_id]]
@@ -60,7 +58,6 @@ module Cadence
 
       # This method is only available in teesting mode
       def fire_timer(workflow_id, run_id, timer_id)
-        
         execution = executions[[workflow_id, run_id]]
 
         execution.complete_future(timer_id)
@@ -87,6 +84,7 @@ module Cadence
 
         execution = WorkflowExecution.new
         executions[[workflow_id, run_id]] = execution
+
         execution_options = ExecutionOptions.new(workflow, options)
 
         metadata = Cadence::Metadata::Workflow.new(
