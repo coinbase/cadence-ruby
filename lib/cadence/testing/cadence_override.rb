@@ -101,6 +101,8 @@ module Cadence
           execution, workflow_id, run_id, workflow.disabled_releases, metadata
         )
 
+        Cadence::ThreadLocalContext.set(context)
+
         execution.run do
           workflow.execute_in_context(context, input)
         end
