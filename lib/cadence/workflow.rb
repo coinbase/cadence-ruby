@@ -9,6 +9,7 @@ module Cadence
     extend ConvenienceMethods
 
     def self.execute_in_context(context, input)
+      previous_context = Cadence::ThreadLocalContext.get
       Cadence::ThreadLocalContext.set(context)
 
       workflow = new(context)
@@ -22,6 +23,8 @@ module Cadence
       Cadence::ErrorHandler.handle(error, metadata: context.metadata)
 
       context.fail(error.class.name, error.message)
+    ensure
+      Cadence::ThreadLocalContext.set(previous_context) if previous_context
     end
 
     def initialize(context)
