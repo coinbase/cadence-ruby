@@ -7,5 +7,7 @@ class ParentWorkflow < Cadence::Workflow
     HelloWorldActivity.execute!('Bob')
 
     return
+  rescue
+    HelloWorldActivity.execute!('Rescue')
   end
 end
