@@ -74,7 +74,6 @@ module Cadence
 
       def start_locally(workflow, *input, **args)
         options = args.delete(:options) || {}
-        override = args.delete(:override) || false
         input << args unless args.empty?
 
         reuse_policy = options[:workflow_id_reuse_policy] || :allow_failed
@@ -90,16 +89,6 @@ module Cadence
         executions[[workflow_id, run_id]] = execution
         execution_options = ExecutionOptions.new(workflow, options)
 
-        if override
-          context = Cadence::Testing::LocalWorkflowContext.new(
-            execution, workflow_id, run_id, workflow.disabled_releases, execution_options.headers
-          )
-          execution.run do
-            workflow.execute_in_context(context, input)
-          end
-          return run_id
-        end
-
         metadata = Cadence::Metadata::Workflow.new(
           domain: execution_options.domain,
           id: workflow_id,
@@ -113,9 +102,6 @@ module Cadence
         context = Cadence::Testing::LocalWorkflowContext.new(
           execution, workflow_id, run_id, workflow.disabled_releases, metadata
         )
-
-        
-        # Cadence::ThreadLocalContext.set(context)
 
         execution.run do
           workflow.execute_in_context(context, input)
