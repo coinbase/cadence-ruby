@@ -126,7 +126,18 @@ module Cadence
       end
 
       def execute_workflow!(workflow_class, *input, **args)
-        Cadence.start_workflow(workflow_class, *input, **args)
+        options = args.delete(:options) || {}
+        input << args unless args.empty?
+
+        execution = WorkflowExecution.new
+        workflow_id = SecureRandom.uuid
+        run_id = SecureRandom.uuid
+        execution_options = ExecutionOptions.new(workflow_class, options)
+        context = Cadence::Testing::LocalWorkflowContext.new(
+          execution, workflow_id, run_id, workflow_class.disabled_releases, execution_options.headers
+        )
+
+        workflow_class.execute_in_context(context, input)
       end
 
       def side_effect(&block)
