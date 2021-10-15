@@ -71,4 +71,25 @@ describe Cadence::Workflow::ExecutionInfo do
       it { is_expected.not_to be_closed }
     end
   end
+
+  describe '#running?' do
+    context 'when status is open' do
+      let(:thrift) { Fabricate(:workflow_execution_info_thrift, closeStatus: nil) }
+
+      it { is_expected.to be_running }
+    end
+
+    described_class::CLOSED_STATUSES.each do |status|
+      context "when status is #{status}" do
+        let(:thrift) do
+          Fabricate(
+            :workflow_execution_info_thrift,
+            closeStatus: CadenceThrift::WorkflowExecutionCloseStatus::VALUE_MAP.invert[status.to_s]
+          )
+        end
+
+        it { is_expected.not_to be_running }
+      end
+    end
+  end
 end
