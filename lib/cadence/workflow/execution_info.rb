@@ -10,6 +10,16 @@ module Cadence
       TERMINATED_STATUS = :TERMINATED
       CONTINUED_AS_NEW_STATUS = :CONTINUED_AS_NEW
       TIMED_OUT_STATUS = :TIMED_OUT
+      CLOSED_STATUS = :CLOSED
+
+      CLOSED_STATUSES = [
+        COMPLETED_STATUS,
+        FAILED_STATUS,
+        CANCELED_STATUS,
+        TERMINATED_STATUS,
+        CONTINUED_AS_NEW_STATUS,
+        TIMED_OUT_STATUS,
+      ].freeze
 
       VALID_STATUSES = [
         RUNNING_STATUS,
@@ -39,6 +49,10 @@ module Cadence
         define_method("#{status.downcase}?") do
           self.status == status
         end
+      end
+
+      def closed?
+        CLOSED_STATUSES.include?(status)
       end
     end
   end

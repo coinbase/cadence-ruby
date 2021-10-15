@@ -50,4 +50,25 @@ describe Cadence::Workflow::ExecutionInfo do
       expect(subject).not_to be_timed_out
     end
   end
+
+  describe '#closed?' do
+    described_class::CLOSED_STATUSES.each do |status|
+      context "when status is #{status}" do
+        let(:thrift) do
+          Fabricate(
+            :workflow_execution_info_thrift,
+            closeStatus: CadenceThrift::WorkflowExecutionCloseStatus::VALUE_MAP.invert[status.to_s]
+          )
+        end
+
+        it { is_expected.to be_closed }
+      end
+    end
+
+    context "when status is RUNNING" do
+      let(:thrift) { Fabricate(:workflow_execution_info_thrift, closeStatus: nil) }
+
+      it { is_expected.not_to be_closed }
+    end
+  end
 end
