@@ -2,6 +2,7 @@ require 'thrift'
 require 'securerandom'
 require 'cadence/json'
 require 'cadence/connection/errors'
+require 'cadence/utils'
 require 'gen/thrift/workflow_service'
 
 module Cadence
@@ -14,7 +15,8 @@ module Cadence
       }.freeze
 
       DEFAULT_OPTIONS = {
-        polling_ttl: 60 # 1 minute
+        polling_ttl: 60, # 1 minute
+        max_page_size: 100
       }.freeze
 
       def initialize(host, port, identity, options = {})
@@ -276,12 +278,29 @@ module Cadence
         send_request('TerminateWorkflowExecution', request)
       end
 
-      def list_open_workflow_executions
-        raise NotImplementedError
+      def list_open_workflow_executions(domain:, from:, to:, next_page_token: nil, workflow_id: nil, workflow: nil)
+        request = CadenceThrift::ListOpenWorkflowExecutionsRequest.new(
+          domain: domain,
+          maximumPageSize: options[:max_page_size],
+          nextPageToken: next_page_token,
+          StartTimeFilter: serialize_time_filter(from, to),
+          executionFilter: serialize_execution_filter(workflow_id),
+          typeFilter: serialize_type_filter(workflow)
+        )
+        send_request('ListOpenWorkflowExecutions', request)
       end
 
-      def list_closed_workflow_executions
-        raise NotImplementedError
+      def list_closed_workflow_executions(domain:, from:, to:, next_page_token: nil, workflow_id: nil, workflow: nil, status: nil)
+        request = CadenceThrift::ListClosedWorkflowExecutionsRequest.new(
+          domain: domain,
+          maximumPageSize: options[:max_page_size],
+          nextPageToken: next_page_token,
+          StartTimeFilter: serialize_time_filter(from, to),
+          executionFilter: serialize_execution_filter(workflow_id),
+          typeFilter: serialize_type_filter(workflow),
+          statusFilter: serialize_status_filter(status)
+        )
+        send_request('ListClosedWorkflowExecutions', request)
       end
 
       def list_workflow_executions
@@ -374,6 +393,31 @@ module Cadence
         Cadence.metrics.timing('request.latency', time_diff_ms, request_name: name)
 
         result
+      end
+
+      def serialize_time_filter(from, to)
+        CadenceThrift::StartTimeFilter.new(
+          earliestTime: Cadence::Utils.time_to_nanos(from).to_i,
+          latestTime: Cadence::Utils.time_to_nanos(to).to_i,
+        )
+      end
+
+      def serialize_execution_filter(value)
+        return unless value
+
+        CadenceThrift::WorkflowExecutionFilter.new(workflowId: value)
+      end
+
+      def serialize_type_filter(value)
+        return unless value
+
+        CadenceThrift::WorkflowTypeFilter.new(name: value)
+      end
+
+      def serialize_status_filter(value)
+        return unless value
+
+        CadenceThrift::WorkflowExecutionCloseStatus::VALUE_MAP.invert[value.to_s]
       end
     end
   end

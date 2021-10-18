@@ -538,4 +538,314 @@ describe Cadence::Client do
       end
     end
   end
+
+  describe '#list_open_workflow_executions' do
+    let(:from) { Time.now - 600 }
+    let(:now) { Time.now }
+    let(:execution_info_thrift) do
+      Fabricate(:workflow_execution_info_thrift, workflow: 'TestWorkflow')
+    end
+    let(:response) do
+      CadenceThrift::ListOpenWorkflowExecutionsResponse.new(
+        executions: [execution_info_thrift],
+        nextPageToken: ''
+      )
+    end
+
+    before do
+      allow(Time).to receive(:now).and_return(now)
+      allow(connection)
+        .to receive(:list_open_workflow_executions)
+        .and_return(response)
+    end
+
+    it 'returns a list of executions' do
+      executions = subject.list_open_workflow_executions(domain, from)
+
+      expect(executions.length).to eq(1)
+      expect(executions.first).to be_an_instance_of(Cadence::Workflow::ExecutionInfo)
+    end
+
+    context 'when history is paginated' do
+      let(:response_1) do
+        CadenceThrift::ListOpenWorkflowExecutionsResponse.new(
+          executions: [execution_info_thrift],
+          nextPageToken: 'a'
+        )
+      end
+      let(:response_2) do
+        CadenceThrift::ListOpenWorkflowExecutionsResponse.new(
+          executions: [execution_info_thrift],
+          nextPageToken: 'b'
+        )
+      end
+      let(:response_3) do
+        CadenceThrift::ListOpenWorkflowExecutionsResponse.new(
+          executions: [execution_info_thrift],
+          nextPageToken: ''
+        )
+      end
+
+      before do
+        allow(connection)
+          .to receive(:list_open_workflow_executions)
+          .and_return(response_1, response_2, response_3)
+      end
+
+      it 'calls the API 3 times' do
+        subject.list_open_workflow_executions(domain, from)
+
+        expect(connection).to have_received(:list_open_workflow_executions).exactly(3).times
+
+        expect(connection)
+          .to have_received(:list_open_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: nil)
+          .once
+
+        expect(connection)
+          .to have_received(:list_open_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: 'a')
+          .once
+
+        expect(connection)
+          .to have_received(:list_open_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: 'b')
+          .once
+      end
+
+      it 'returns a list of executions' do
+        executions = subject.list_open_workflow_executions(domain, from)
+
+        expect(executions.length).to eq(3)
+        executions.each do |execution|
+          expect(execution).to be_an_instance_of(Cadence::Workflow::ExecutionInfo)
+        end
+      end
+    end
+
+    context 'when given unsupported filter' do
+      let(:filter) { { foo: :bar } }
+
+      it 'raises ArgumentError' do
+        expect do
+          subject.list_open_workflow_executions(domain, from, filter: filter)
+        end.to raise_error(ArgumentError, 'Allowed filters are: [:workflow, :workflow_id]')
+      end
+    end
+
+    context 'when given multiple filters' do
+      let(:filter) { { workflow: 'TestWorkflow', workflow_id: 'xxx' } }
+
+      it 'raises ArgumentError' do
+        expect do
+          subject.list_open_workflow_executions(domain, from, filter: filter)
+        end.to raise_error(ArgumentError, 'Only one filter is allowed')
+      end
+    end
+
+    context 'when called without filters' do
+      it 'makes a request' do
+        subject.list_open_workflow_executions(domain, from)
+
+        expect(connection)
+          .to have_received(:list_open_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: nil)
+      end
+    end
+
+    context 'when called with :to' do
+      it 'makes a request' do
+        subject.list_open_workflow_executions(domain, from, now - 10)
+
+        expect(connection)
+          .to have_received(:list_open_workflow_executions)
+          .with(domain: domain, from: from, to: now - 10, next_page_token: nil)
+      end
+    end
+
+    context 'when called with a :workflow filter' do
+      it 'makes a request' do
+        subject.list_open_workflow_executions(domain, from, filter: { workflow: 'TestWorkflow' })
+
+        expect(connection)
+          .to have_received(:list_open_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: nil, workflow: 'TestWorkflow')
+      end
+    end
+
+    context 'when called with a :workflow_id filter' do
+      it 'makes a request' do
+        subject.list_open_workflow_executions(domain, from, filter: { workflow_id: 'xxx' })
+
+        expect(connection)
+          .to have_received(:list_open_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: nil, workflow_id: 'xxx')
+      end
+    end
+  end
+
+  describe '#list_closed_workflow_executions' do
+    let(:from) { Time.now - 600 }
+    let(:now) { Time.now }
+    let(:execution_info_thrift) do
+      Fabricate(:workflow_execution_info_thrift, workflow: 'TestWorkflow')
+    end
+    let(:response) do
+      CadenceThrift::ListClosedWorkflowExecutionsResponse.new(
+        executions: [execution_info_thrift],
+        nextPageToken: ''
+      )
+    end
+
+    before do
+      allow(Time).to receive(:now).and_return(now)
+      allow(connection)
+        .to receive(:list_closed_workflow_executions)
+        .and_return(response)
+    end
+
+    it 'returns a list of executions' do
+      executions = subject.list_closed_workflow_executions(domain, from)
+
+      expect(executions.length).to eq(1)
+      expect(executions.first).to be_an_instance_of(Cadence::Workflow::ExecutionInfo)
+    end
+
+    context 'when history is paginated' do
+      let(:response_1) do
+        CadenceThrift::ListClosedWorkflowExecutionsResponse.new(
+          executions: [execution_info_thrift],
+          nextPageToken: 'a'
+        )
+      end
+      let(:response_2) do
+        CadenceThrift::ListClosedWorkflowExecutionsResponse.new(
+          executions: [execution_info_thrift],
+          nextPageToken: 'b'
+        )
+      end
+      let(:response_3) do
+        CadenceThrift::ListClosedWorkflowExecutionsResponse.new(
+          executions: [execution_info_thrift],
+          nextPageToken: ''
+        )
+      end
+
+      before do
+        allow(connection)
+          .to receive(:list_closed_workflow_executions)
+          .and_return(response_1, response_2, response_3)
+      end
+
+      it 'calls the API 3 times' do
+        subject.list_closed_workflow_executions(domain, from)
+
+        expect(connection).to have_received(:list_closed_workflow_executions).exactly(3).times
+
+        expect(connection)
+          .to have_received(:list_closed_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: nil)
+          .once
+
+        expect(connection)
+          .to have_received(:list_closed_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: 'a')
+          .once
+
+        expect(connection)
+          .to have_received(:list_closed_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: 'b')
+          .once
+      end
+
+      it 'returns a list of executions' do
+        executions = subject.list_closed_workflow_executions(domain, from)
+
+        expect(executions.length).to eq(3)
+        executions.each do |execution|
+          expect(execution).to be_an_instance_of(Cadence::Workflow::ExecutionInfo)
+        end
+      end
+    end
+
+    context 'when given unsupported filter' do
+      let(:filter) { { foo: :bar } }
+
+      it 'raises ArgumentError' do
+        expect do
+          subject.list_closed_workflow_executions(domain, from, filter: filter)
+        end.to raise_error(ArgumentError, 'Allowed filters are: [:status, :workflow, :workflow_id]')
+      end
+    end
+
+    context 'when given multiple filters' do
+      let(:filter) { { workflow: 'TestWorkflow', workflow_id: 'xxx' } }
+
+      it 'raises ArgumentError' do
+        expect do
+          subject.list_closed_workflow_executions(domain, from, filter: filter)
+        end.to raise_error(ArgumentError, 'Only one filter is allowed')
+      end
+    end
+
+    context 'when called without filters' do
+      it 'makes a request' do
+        subject.list_closed_workflow_executions(domain, from)
+
+        expect(connection)
+          .to have_received(:list_closed_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: nil)
+      end
+    end
+
+    context 'when called with :to' do
+      it 'makes a request' do
+        subject.list_closed_workflow_executions(domain, from, now - 10)
+
+        expect(connection)
+          .to have_received(:list_closed_workflow_executions)
+          .with(domain: domain, from: from, to: now - 10, next_page_token: nil)
+      end
+    end
+
+    context 'when called with a :status filter' do
+      it 'makes a request' do
+        subject.list_closed_workflow_executions(
+          domain,
+          from,
+          filter: { status: Cadence::Workflow::Status::COMPLETED }
+        )
+
+        expect(connection)
+          .to have_received(:list_closed_workflow_executions)
+          .with(
+            domain: domain,
+            from: from,
+            to: now,
+            next_page_token: nil,
+            status: Cadence::Workflow::Status::COMPLETED
+          )
+      end
+    end
+
+    context 'when called with a :workflow filter' do
+      it 'makes a request' do
+        subject.list_closed_workflow_executions(domain, from, filter: { workflow: 'TestWorkflow' })
+
+        expect(connection)
+          .to have_received(:list_closed_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: nil, workflow: 'TestWorkflow')
+      end
+    end
+
+    context 'when called with a :workflow_id filter' do
+      it 'makes a request' do
+        subject.list_closed_workflow_executions(domain, from, filter: { workflow_id: 'xxx' })
+
+        expect(connection)
+          .to have_received(:list_closed_workflow_executions)
+          .with(domain: domain, from: from, to: now, next_page_token: nil, workflow_id: 'xxx')
+      end
+    end
+  end
 end
