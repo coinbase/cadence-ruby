@@ -1,34 +1,17 @@
 require 'cadence/utils'
+require 'cadence/workflow/status'
 
 module Cadence
   class Workflow
     class ExecutionInfo < Struct.new(:workflow, :workflow_id, :run_id, :start_time, :close_time, :status, :history_length, keyword_init: true)
-      OPEN_STATUS = :OPEN
-      COMPLETED_STATUS = :COMPLETED
-      FAILED_STATUS = :FAILED
-      CANCELED_STATUS = :CANCELED
-      TERMINATED_STATUS = :TERMINATED
-      CONTINUED_AS_NEW_STATUS = :CONTINUED_AS_NEW
-      TIMED_OUT_STATUS = :TIMED_OUT
-      CLOSED_STATUS = :CLOSED # agreggation of all closed statuses
-
-      CLOSED_STATUSES = [
-        COMPLETED_STATUS,
-        FAILED_STATUS,
-        CANCELED_STATUS,
-        TERMINATED_STATUS,
-        CONTINUED_AS_NEW_STATUS,
-        TIMED_OUT_STATUS,
-      ].freeze
-
-      VALID_STATUSES = [
-        OPEN_STATUS,
-        COMPLETED_STATUS,
-        FAILED_STATUS,
-        CANCELED_STATUS,
-        TERMINATED_STATUS,
-        CONTINUED_AS_NEW_STATUS,
-        TIMED_OUT_STATUS
+      STATUSES = [
+        Cadence::Workflow::Status::OPEN,
+        Cadence::Workflow::Status::COMPLETED,
+        Cadence::Workflow::Status::FAILED,
+        Cadence::Workflow::Status::CANCELED,
+        Cadence::Workflow::Status::TERMINATED,
+        Cadence::Workflow::Status::CONTINUED_AS_NEW,
+        Cadence::Workflow::Status::TIMED_OUT
       ].freeze
 
       def self.generate_from(response)
@@ -40,12 +23,12 @@ module Cadence
           run_id: response.execution.runId,
           start_time: Utils.time_from_nanos(response.startTime),
           close_time: Utils.time_from_nanos(response.closeTime),
-          status: status&.to_sym || OPEN_STATUS,
+          status: status&.to_sym || Cadence::Workflow::Status::OPEN,
           history_length: response.historyLength,
         ).freeze
       end
 
-      VALID_STATUSES.each do |status|
+      STATUSES.each do |status|
         define_method("#{status.downcase}?") do
           self.status == status
         end
@@ -53,11 +36,11 @@ module Cadence
 
       # Backwards compatibility
       def running?
-        self.status == OPEN_STATUS
+        self.status == Cadence::Workflow::Status::OPEN
       end
 
       def closed?
-        CLOSED_STATUSES.include?(status)
+        !running?
       end
     end
   end

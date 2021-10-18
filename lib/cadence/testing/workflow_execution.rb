@@ -1,4 +1,5 @@
 require 'cadence/testing/future_registry'
+require 'cadence/workflow/status'
 
 module Cadence
   module Testing
@@ -6,7 +7,7 @@ module Cadence
       attr_reader :status
 
       def initialize
-        @status = Workflow::ExecutionInfo::RUNNING_STATUS
+        @status = Workflow::Status::OPEN
         @futures = FutureRegistry.new
       end
 
@@ -17,9 +18,9 @@ module Cadence
 
       def resume
         fiber.resume
-        @status = Workflow::ExecutionInfo::COMPLETED_STATUS unless fiber.alive?
+        @status = Workflow::Status::COMPLETED unless fiber.alive?
       rescue StandardError
-        @status = Workflow::ExecutionInfo::FAILED_STATUS
+        @status = Workflow::Status::FAILED
       end
 
       def register_future(id, future)

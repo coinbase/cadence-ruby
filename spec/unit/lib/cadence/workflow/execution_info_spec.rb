@@ -1,11 +1,11 @@
 require 'cadence/workflow/execution_info'
+require 'cadence/workflow/status'
 
 describe Cadence::Workflow::ExecutionInfo do
   subject { described_class.generate_from(thrift) }
   let(:thrift) { Fabricate(:workflow_execution_info_thrift) }
 
   describe '.generate_for' do
-
     it 'generates info from thrift' do
       expect(subject.workflow).to eq(thrift.type.name)
       expect(subject.workflow_id).to eq(thrift.execution.workflowId)
@@ -52,7 +52,7 @@ describe Cadence::Workflow::ExecutionInfo do
   end
 
   describe '#closed?' do
-    described_class::CLOSED_STATUSES.each do |status|
+    Cadence::Workflow::Status::API_STATUSES.each do |status|
       context "when status is #{status}" do
         let(:thrift) do
           Fabricate(
@@ -65,7 +65,7 @@ describe Cadence::Workflow::ExecutionInfo do
       end
     end
 
-    context "when status is RUNNING" do
+    context "when status is OPEN" do
       let(:thrift) { Fabricate(:workflow_execution_info_thrift, closeStatus: nil) }
 
       it { is_expected.not_to be_closed }
@@ -79,7 +79,7 @@ describe Cadence::Workflow::ExecutionInfo do
       it { is_expected.to be_running }
     end
 
-    described_class::CLOSED_STATUSES.each do |status|
+    Cadence::Workflow::Status::API_STATUSES.each do |status|
       context "when status is #{status}" do
         let(:thrift) do
           Fabricate(

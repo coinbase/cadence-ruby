@@ -2,6 +2,7 @@ require 'securerandom'
 require 'cadence/thread_local_context'
 require 'cadence/activity/async_token'
 require 'cadence/workflow/execution_info'
+require 'cadence/workflow/status'
 require 'cadence/metadata/workflow'
 require 'cadence/testing/workflow_execution'
 require 'cadence/testing/local_workflow_context'
@@ -122,14 +123,14 @@ module Cadence
       def disallowed_statuses_for(reuse_policy)
         case reuse_policy
         when :allow_failed
-          [Workflow::ExecutionInfo::RUNNING_STATUS, Workflow::ExecutionInfo::COMPLETED_STATUS]
+          [Workflow::Status::OPEN, Workflow::Status::COMPLETED]
         when :allow
-          [Workflow::ExecutionInfo::RUNNING_STATUS]
+          [Workflow::Status::OPEN]
         when :reject
           [
-            Workflow::ExecutionInfo::RUNNING_STATUS,
-            Workflow::ExecutionInfo::FAILED_STATUS,
-            Workflow::ExecutionInfo::COMPLETED_STATUS
+            Workflow::Status::OPEN,
+            Workflow::Status::FAILED,
+            Workflow::Status::COMPLETED
           ]
         end
       end

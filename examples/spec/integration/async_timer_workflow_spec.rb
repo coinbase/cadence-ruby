@@ -14,7 +14,7 @@ describe AsyncTimerWorkflow do
 
     info = Cadence.fetch_workflow_execution_info('ruby-samples', workflow_id, run_id)
 
-    expect(info.status).to eq(Cadence::Workflow::ExecutionInfo::COMPLETED_STATUS)
+    expect(info).to be_completed
   end
 
   it 'executes HelloWorldActivity' do

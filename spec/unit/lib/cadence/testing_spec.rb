@@ -2,6 +2,7 @@ require 'cadence/testing'
 require 'cadence/client'
 require 'cadence/configuration'
 require 'cadence/workflow'
+require 'cadence/workflow/status'
 
 describe Cadence::Testing::CadenceOverride do
   let(:client) { Cadence::Client.new(config) }
@@ -85,7 +86,7 @@ describe Cadence::Testing::CadenceOverride do
           end
 
           context 'when workflow is started' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::RUNNING_STATUS }
+            let(:status) { Cadence::Workflow::Status::OPEN }
 
             it 'raises error' do
               expect { subject }.to raise_error(error_class)
@@ -93,7 +94,7 @@ describe Cadence::Testing::CadenceOverride do
           end
 
           context 'when workflow has completed' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::COMPLETED_STATUS }
+            let(:status) { Cadence::Workflow::Status::COMPLETED }
 
             it 'raises error' do
               expect { subject }.to raise_error(error_class)
@@ -101,7 +102,7 @@ describe Cadence::Testing::CadenceOverride do
           end
 
           context 'when workflow has failed' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::FAILED_STATUS }
+            let(:status) { Cadence::Workflow::Status::FAILED }
 
             it { is_expected.to be_a(String) }
           end
@@ -117,7 +118,7 @@ describe Cadence::Testing::CadenceOverride do
           end
 
           context 'when workflow is started' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::RUNNING_STATUS }
+            let(:status) { Cadence::Workflow::Status::OPEN }
 
             it 'raises error' do
               expect { subject }.to raise_error(error_class)
@@ -125,13 +126,13 @@ describe Cadence::Testing::CadenceOverride do
           end
 
           context 'when workflow has completed' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::COMPLETED_STATUS }
+            let(:status) { Cadence::Workflow::Status::COMPLETED }
 
             it { is_expected.to be_a(String) }
           end
 
           context 'when workflow has failed' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::FAILED_STATUS }
+            let(:status) { Cadence::Workflow::Status::FAILED }
 
             it { is_expected.to be_a(String) }
           end
@@ -147,7 +148,7 @@ describe Cadence::Testing::CadenceOverride do
           end
 
           context 'when workflow is started' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::RUNNING_STATUS }
+            let(:status) { Cadence::Workflow::Status::OPEN }
 
             it 'raises error' do
               expect { subject }.to raise_error(error_class)
@@ -155,7 +156,7 @@ describe Cadence::Testing::CadenceOverride do
           end
 
           context 'when workflow has completed' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::COMPLETED_STATUS }
+            let(:status) { Cadence::Workflow::Status::COMPLETED }
 
             it 'raises error' do
               expect { subject }.to raise_error(error_class)
@@ -163,7 +164,7 @@ describe Cadence::Testing::CadenceOverride do
           end
 
           context 'when workflow has failed' do
-            let(:status) { Cadence::Workflow::ExecutionInfo::FAILED_STATUS }
+            let(:status) { Cadence::Workflow::Status::FAILED }
 
             it 'raises error' do
               expect { subject }.to raise_error(error_class)
