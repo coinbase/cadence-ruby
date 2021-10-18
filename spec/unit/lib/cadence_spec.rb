@@ -57,6 +57,16 @@ describe Cadence do
       it_behaves_like 'a forwarded method',
         :get_workflow_history, domain: 'test-domain', workflow_id: 'x', run_id: 'y'
     end
+
+    describe '.list_open_workflow_executions' do
+      it_behaves_like 'a forwarded method',
+        :list_open_workflow_executions, 'test-domain', Time.now - 100, filter: { workflow: 'xxx' }
+    end
+
+    describe '.list_closed_workflow_executions' do
+      it_behaves_like 'a forwarded method',
+        :list_closed_workflow_executions, 'test-domain', Time.now - 100, filter: { workflow: 'xxx' }
+    end
   end
 
   describe '.configure' do

@@ -5,6 +5,7 @@ require 'cadence/activity/async_token'
 require 'cadence/workflow'
 require 'cadence/workflow/history'
 require 'cadence/workflow/execution_info'
+require 'cadence/workflow/status'
 require 'cadence/reset_strategy'
 
 module Cadence
@@ -150,6 +151,18 @@ module Cadence
       Workflow::History.new(history_response.history.events)
     end
 
+    def list_open_workflow_executions(domain, from, to = Time.now, filter: {})
+      validate_filter(filter, :workflow, :workflow_id)
+
+      fetch_executions(:open, { domain: domain, from: from, to: to }.merge(filter))
+    end
+
+    def list_closed_workflow_executions(domain, from, to = Time.now, filter: {})
+      validate_filter(filter, :status, :workflow, :workflow_id)
+
+      fetch_executions(:closed, { domain: domain, from: from, to: to }.merge(filter))
+    end
+
     private
 
     attr_reader :config
@@ -182,6 +195,42 @@ module Cadence
         history.find_event_by_id(scheduled_event.attributes.decisionTaskCompletedEventId)
       else
         raise ArgumentError, 'Unsupported reset strategy'
+      end
+    end
+
+    def validate_filter(filter, *allowed_filters)
+      if (filter.keys - allowed_filters).length > 0
+        raise ArgumentError, "Allowed filters are: #{allowed_filters}"
+      end
+
+      raise ArgumentError, 'Only one filter is allowed' if filter.size > 1
+    end
+
+    def fetch_executions(status, request_options)
+      api_method =
+        if status == :open
+          :list_open_workflow_executions
+        else
+          :list_closed_workflow_executions
+        end
+
+      executions = []
+      next_page_token = nil
+
+      loop do
+        response = connection.public_send(
+          api_method,
+          **request_options.merge(next_page_token: next_page_token)
+        )
+
+        executions += Array(response.executions)
+        next_page_token = response.nextPageToken
+
+        break if next_page_token.to_s.empty?
+      end
+
+      executions.map do |raw_execution|
+        Cadence::Workflow::ExecutionInfo.generate_from(raw_execution)
       end
     end
   end
