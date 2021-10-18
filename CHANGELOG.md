@@ -1,6 +1,11 @@
 # Changelog
+
+## 0.1.13
+- Add methods for fetching workflow executions (`#list_open_workflow_executions` and `#list_closed_workflow_executions`)
+
 ## 0.1.12
 - Restore previous workflow context after finished processing
+
 ## 0.1.11
 - Update Testing::LocalWorkflowContext execute_activity method to fail the future when the activity fails. 
 
