@@ -19,6 +19,11 @@ module Cadence
         max_page_size: 100
       }.freeze
 
+      HISTORY_EVENT_FILTER = {
+         all: CadenceThrift::HistoryEventFilterType::ALL_EVENT,
+         close: CadenceThrift::HistoryEventFilterType::CLOSE_EVENT,
+       }.freeze
+
       def initialize(host, port, identity, options = {})
         @url = "http://#{host}:#{port}"
         @identity = identity
@@ -104,14 +109,23 @@ module Cadence
         send_request('StartWorkflowExecution', request)
       end
 
-      def get_workflow_execution_history(domain:, workflow_id:, run_id:, next_page_token: nil)
+      def get_workflow_execution_history(
+        domain:,
+        workflow_id:,
+        run_id:,
+        next_page_token: nil,
+        wait_for_new_event: false,
+        event_type: :all
+      )
         request = CadenceThrift::GetWorkflowExecutionHistoryRequest.new(
           domain: domain,
           execution: CadenceThrift::WorkflowExecution.new(
             workflowId: workflow_id,
             runId: run_id
           ),
-          nextPageToken: next_page_token
+          nextPageToken: next_page_token,
+          waitForNewEvent: wait_for_new_event,
+          HistoryEventFilterType: HISTORY_EVENT_FILTER[event_type]
         )
 
         send_request('GetWorkflowExecutionHistory', request)
