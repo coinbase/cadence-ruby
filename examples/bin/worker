@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require_relative '../init'
 
+require 'cadence/crew'
 require 'cadence/worker'
 
 Dir[File.expand_path('../workflows/*.rb', __dir__)].each { |f| require f }
@@ -49,4 +50,10 @@ worker.register_activity(Trip::RentCarActivity)
 worker.add_decision_middleware(LoggingMiddleware, 'EXAMPLE')
 worker.add_activity_middleware(LoggingMiddleware, 'EXAMPLE')
 
-worker.start
+option1 = ARGV[0]
+if option1 == '--crew'
+  crew = Cadence::Crew.new(worker, 2)
+  crew.dispatch
+else
+  worker.start
+end
