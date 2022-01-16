@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.14
+- Add a Crew implementation to fork and manage worker child processes
+
 ## 0.1.13
 - Add methods for fetching workflow executions (`#list_open_workflow_executions` and `#list_closed_workflow_executions`)
 

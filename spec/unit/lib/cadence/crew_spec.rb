@@ -32,7 +32,7 @@ describe Cadence::Crew do
     describe 'signal handling' do
       let(:real_worker) { Cadence::Worker.new(Cadence::Configuration.new) }
       let(:real_crew) { described_class.new(real_worker, crew_size) }
-      let(:thread_sync_delay) { 1.5 }
+      let(:thread_sync_delay) { 2 }
 
       before do
         @thread = Thread.new { real_crew.dispatch }
