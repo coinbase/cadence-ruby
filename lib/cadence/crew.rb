@@ -2,18 +2,19 @@ require 'logger'
 
 module Cadence
 
-  # Creates a group of child worker processes and tracks their state
-  # Params:
-  # +worker+:: The worker that will be forked and duplicated in child processes
-  # +crew_size+:: The number of workers that will be created
   class Crew
     attr_reader :crew_size
 
-    def initialize(worker, crew_size)
+    # Creates a group of child worker processes and tracks their state
+    # 
+    # @param worker [Cadence::Worker] The worker that will be forked and duplicated in child processes
+    # @param crew_size [Numeric] The number of workers that will be created
+    # @param logger [Logger] A logger
+    def initialize(worker, crew_size, logger = Cadence.configuration.logger)
       @worker = worker
       @crew = []
       @crew_size = crew_size
-      @logger = Logger.new(STDOUT, progname: 'cadence_client')
+      @logger = logger
     end
 
     # Creates the worker processes and starts monitoring them
@@ -37,7 +38,10 @@ module Cadence
     def dispatch_worker
       pid = fork { worker.start }
       crew << pid
+
+      Cadence.metrics.gauge("crew.num_workers", crew.size)
       logger.info "Worker started. pid: #{pid}"
+
       pid
     end
 
@@ -45,6 +49,8 @@ module Cadence
       while crew.length.positive?
         (pid, status) = ::Process.waitpid2(-1)
         crew.delete(pid)
+        
+        Cadence.metrics.gauge("crew.num_workers", crew.size)
         logger.info "Worker quit. pid: #{pid.to_s}, exitstatus: #{status.exitstatus}, remaining_workers: #{crew.length}"
       end
 
