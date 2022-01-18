@@ -1,6 +1,9 @@
 # Changelog
 
 ## 0.1.14
+- Add rbi definition for Cadence::Crew
+
+## 0.1.14
 - Add a Crew implementation to fork and manage worker child processes
 
 ## 0.1.13

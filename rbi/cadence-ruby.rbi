@@ -142,7 +142,7 @@ end
 class Cadence::Crew
     def dispatch; end
 
-    def stop; end
+    def stop(signal); end
 end
 
 module Cadence::Concerns
