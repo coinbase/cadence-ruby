@@ -139,6 +139,12 @@ end
 class Cadence::Worker
 end
 
+class Cadence::Crew
+    def dispatch; end
+
+    def stop(signal); end
+end
+
 module Cadence::Concerns
 end
 
