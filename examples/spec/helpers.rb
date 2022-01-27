@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'cadence/workflow/history'
 
 module Helpers
   def run_workflow(workflow, *input, **args)
@@ -12,7 +13,7 @@ module Helpers
     client = Cadence.send(:default_client)
     connection = client.send(:connection)
 
-    connection.get_workflow_execution_history(
+    result = connection.get_workflow_execution_history(
       domain: Cadence.configuration.domain,
       workflow_id: workflow_id,
       run_id: run_id,
@@ -20,5 +21,7 @@ module Helpers
       wait_for_new_event: true,
       event_type: :close
     )
+
+    Cadence::History.new(result.history.events)
   end
 end
