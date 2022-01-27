@@ -22,6 +22,6 @@ module Helpers
       event_type: :close
     )
 
-    Cadence::History.new(result.history.events)
+    Cadence::Workflow::History.new(result.history.events)
   end
 end
