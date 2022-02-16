@@ -4,11 +4,9 @@ require 'cadence/workflow/history'
 module Helpers
   def run_workflow(workflow, *input, **args)
     workflow_id = SecureRandom.uuid
-    run_id = Cadence.start_workflow(
-      workflow,
-      *input,
-      **args.merge(options: { workflow_id: workflow_id })
-    )
+    args[:options] = args.fetch(:options, {}).merge(workflow_id: workflow_id)
+
+    run_id = Cadence.start_workflow(workflow, *input, **args)
 
     client = Cadence.send(:default_client)
     connection = client.send(:connection)
