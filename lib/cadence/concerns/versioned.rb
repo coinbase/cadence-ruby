@@ -12,63 +12,66 @@ module Cadence
 
       class UnknownWorkflowVersion < Cadence::ClientError; end
 
-      module ClassMethods
-        def execute_in_context(context, input)
-          target_version = context.headers[VERSION_HEADER_NAME].to_i
-          workflow_class = version_class_for(target_version)
+      class Workflow
+        def initialize(main_class, headers)
+          version = headers.fetch(VERSION_HEADER_NAME, main_class.latest_version).to_i
+          version_class = main_class.version_class_for(version)
 
-          if !workflow_class
-            raise UnknownWorkflowVersion, "Unknown version #{target_version} for #{self.name}"
-          end
-
-          super
+          @version = version
+          @main_class = main_class
+          @version_class = version_class
         end
 
+        def domain
+          version_class.domain || main_class.domain
+        end
+
+        def task_list
+          version_class.task_list || main_class.task_list
+        end
+
+        def retry_policy
+          version_class.retry_policy || main_class.retry_policy
+        end
+
+        def timeouts
+          version_class.timeouts || main_class.timeouts
+        end
+
+        def headers
+          (version_class.headers || main_class.headers || {}).merge(VERSION_HEADER_NAME => version.to_s)
+        end
+
+        private
+
+        attr_reader :version, :main_class, :version_class
+      end
+
+      module ClassMethods
         def version(number, workflow_class)
           versions[number] = workflow_class
         end
 
-        def domain(*args)
-          return version_class_for(latest_version).domain || @domain if args.empty?
-          @domain = args.first
-        end
+        def execute_in_context(context, input)
+          version = context.headers.fetch(VERSION_HEADER_NAME, DEFAULT_VERSION).to_i
+          version_class = version_class_for(version)
 
-        def task_list(*args)
-          return version_class_for(latest_version).task_list || @task_list if args.empty?
-          @task_list = args.first
-        end
-
-        def retry_policy(*args)
-          return version_class_for(latest_version).retry_policy || @retry_policy if args.empty?
-          @retry_policy = Cadence::RetryPolicy.new(args.first)
-          @retry_policy.validate!
-        end
-
-        def timeouts(*args)
-          return version_class_for(latest_version).timeouts || @timeouts if args.empty?
-          @timeouts = args.first
-        end
-
-        def headers(*args)
-          if args.empty?
-            headers = version_class_for(latest_version).headers || @headers
-
-            if headers.key?(VERSION_HEADER_NAME)
-              warn "[WARNING] #{VERSION_HEADER_NAME} header collision"
-            end
-
-            return headers.merge(VERSION_HEADER_NAME => latest_version.to_s)
+          if self == version_class
+            super
+          else
+            # forward the method call to the target version class
+            version_class.execute_in_context(context, input)
           end
-
-          super
         end
 
-        def new(context)
-          target_version = context.headers[VERSION_HEADER_NAME].to_i
-          workflow_class = version_class_for(target_version)
+        def version_class_for(version)
+          versions.fetch(version.to_i) do
+            raise UnknownWorkflowVersion, "Unknown version #{version} for #{self.name}"
+          end
+        end
 
-          # Swap top-level class with version-specific class
-          workflow_class.new(context)
+        def latest_version
+          versions.keys.max
         end
 
         private
@@ -76,14 +79,6 @@ module Cadence
         def versions
           # Initialize with the default version
           @versions ||= { DEFAULT_VERSION => self }
-        end
-
-        def version_class_for(version)
-          versions[version]
-        end
-
-        def latest_version
-          versions.keys.max
         end
       end
     end
