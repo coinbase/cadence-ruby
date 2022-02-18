@@ -19,7 +19,7 @@ module Cadence
       # For Cadence::Workflow and Cadence::Activity use defined values as the next option
       if object.singleton_class.included_modules.include?(Concerns::Executable)
         # In a versioned workflow merge the specific version options with default workflow options
-        object = Concerns::Versioned::Workflow.new(object, @headers) if versioned?(object)
+        object = Concerns::Versioned::Workflow.new(object, options[:version]) if versioned?(object)
 
         @domain ||= object.domain
         @task_list ||= object.task_list

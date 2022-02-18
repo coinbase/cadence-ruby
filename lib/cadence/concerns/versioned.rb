@@ -13,8 +13,10 @@ module Cadence
       class UnknownWorkflowVersion < Cadence::ClientError; end
 
       class Workflow
-        def initialize(main_class, headers)
-          version = headers.fetch(VERSION_HEADER_NAME, main_class.latest_version).to_i
+        attr_reader :version, :main_class, :version_class
+
+        def initialize(main_class, version = nil)
+          version ||= main_class.pick_version
           version_class = main_class.version_class_for(version)
 
           @version = version
@@ -23,11 +25,21 @@ module Cadence
         end
 
         def domain
-          version_class.domain || main_class.domain
+          if version_class.domain
+            warn '[WARNING] Overriding domain in a workflow version is not yet supported. ' \
+                 "Called from #{version_class}."
+          end
+
+          main_class.domain
         end
 
         def task_list
-          version_class.task_list || main_class.task_list
+          if version_class.task_list
+            warn '[WARNING] Overriding task_list in a workflow version is not yet supported. ' \
+                 "Called from #{version_class}."
+          end
+
+          main_class.task_list
         end
 
         def retry_policy
@@ -41,10 +53,6 @@ module Cadence
         def headers
           (version_class.headers || main_class.headers || {}).merge(VERSION_HEADER_NAME => version.to_s)
         end
-
-        private
-
-        attr_reader :version, :main_class, :version_class
       end
 
       module ClassMethods
@@ -70,11 +78,18 @@ module Cadence
           end
         end
 
-        def latest_version
-          versions.keys.max
+        def pick_version
+          version_picker.call(versions.keys.max)
         end
 
         private
+
+        DEFAULT_VERSION_PICKER = lambda { |latest_version| latest_version }
+
+        def version_picker(&block)
+          return @version_picker || DEFAULT_VERSION_PICKER unless block_given?
+          @version_picker = block
+        end
 
         def versions
           # Initialize with the default version

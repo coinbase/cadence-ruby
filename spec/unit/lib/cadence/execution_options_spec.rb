@@ -199,18 +199,18 @@ describe Cadence::ExecutionOptions do
   end
 
   context 'when initialized with a Versioned workflow' do
-    class TestVersionedWorkflowV1 < Cadence::Workflow
+    class TestVersionedExecutionOptionsWorkflowV1 < Cadence::Workflow
       retry_policy interval: 5, backoff: 1, max_attempts: 2
       timeouts execution: 1
     end
 
-    class TestVersionedWorkflowV2 < Cadence::Workflow
+    class TestVersionedExecutionOptionsWorkflowV2 < Cadence::Workflow
       domain 'new-domain'
       task_list 'new-task-list'
       headers 'HeaderV2' => 'TestV2'
     end
 
-    class TestVersionedWorkflow < Cadence::Workflow
+    class TestVersionedExecutionOptionsWorkflow < Cadence::Workflow
       include Cadence::Concerns::Versioned
 
       domain 'domain'
@@ -219,18 +219,18 @@ describe Cadence::ExecutionOptions do
       timeouts start_to_close: 10
       headers 'HeaderA' => 'TestA', 'HeaderB' => 'TestB'
 
-      version 1, TestVersionedWorkflowV1
-      version 2, TestVersionedWorkflowV2
+      version 1, TestVersionedExecutionOptionsWorkflowV1
+      version 2, TestVersionedExecutionOptionsWorkflowV2
     end
 
-    let(:object) { TestVersionedWorkflow }
+    let(:object) { TestVersionedExecutionOptionsWorkflow }
     let(:options) { {} }
 
     context 'when initialized without the version header' do
       it 'is initialized with a mix of latest version and default version values' do
         expect(subject.name).to eq(object.name)
-        expect(subject.domain).to eq('new-domain')
-        expect(subject.task_list).to eq('new-task-list')
+        expect(subject.domain).to eq('domain')
+        expect(subject.task_list).to eq('task-list')
         expect(subject.retry_policy).to be_an_instance_of(Cadence::RetryPolicy)
         expect(subject.retry_policy.interval).to eq(1)
         expect(subject.retry_policy.backoff).to eq(2)
@@ -244,7 +244,7 @@ describe Cadence::ExecutionOptions do
     end
 
     context 'when initialized with the version header' do
-      let(:options) { { headers: { 'Version' => '1' } } }
+      let(:options) { { version: 1 } }
 
       it 'is initialized with a mix of specified version and default version values' do
         expect(subject.name).to eq(object.name)
@@ -264,7 +264,7 @@ describe Cadence::ExecutionOptions do
     end
 
     context 'when initialized with the default version' do
-      let(:options) { { headers: { 'Version' => '0' } } }
+      let(:options) { { version: 0 } }
 
       it 'is initialized with a default version values' do
         expect(subject.name).to eq(object.name)

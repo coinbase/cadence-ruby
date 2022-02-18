@@ -15,7 +15,7 @@ describe VersionedWorkflow, :integration do
     end
 
     context 'with explicit version' do
-      let(:options) { { options: { headers: { 'Version' => '1' } } } }
+      let(:options) { { options: { version: 1 } } }
 
       it 'executes the specified version' do
         result = run_workflow(described_class, options)
@@ -28,7 +28,7 @@ describe VersionedWorkflow, :integration do
     end
 
     context 'with a non-existing version' do
-      let(:options) { { options: { headers: { 'Version' => '3' } } } }
+      let(:options) { { options: { version: 3 } } }
 
       it 'raises an error' do
         expect do
