@@ -50,10 +50,4 @@ worker.register_activity(Trip::RentCarActivity)
 worker.add_decision_middleware(LoggingMiddleware, 'EXAMPLE')
 worker.add_activity_middleware(LoggingMiddleware, 'EXAMPLE')
 
-option1 = ARGV[0]
-if option1 == '--crew'
-  crew = Cadence::Crew.new(worker, 2)
-  crew.dispatch
-else
-  worker.start
-end
+worker.start
