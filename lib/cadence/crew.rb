@@ -40,7 +40,7 @@ module Cadence
     private
 
     attr_accessor :after_fork_block
-    attr_reader :worker, :crew, :logger, :after_fork_block
+    attr_reader :worker, :crew, :logger
 
     def dispatch_worker
       pid = fork do
