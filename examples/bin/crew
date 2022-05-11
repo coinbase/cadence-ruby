@@ -27,7 +27,6 @@ init = proc do |worker|
   worker.register_workflow(SimpleTimerWorkflow)
   worker.register_workflow(TimeoutWorkflow)
   worker.register_workflow(TripBookingWorkflow)
-  worker.register_workflow(GrpcClientWorkflow)
 
   worker.register_activity(AsyncActivity)
   worker.register_activity(EchoActivity)
