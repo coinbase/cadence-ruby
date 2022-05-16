@@ -52,5 +52,5 @@ end
 
 worker = Cadence::Worker.new(polling_ttl: 10, thread_pool_size: 20)
 crew = Cadence::Crew.new(worker, 2)
-crew.after_fork init
+crew.after_fork &init
 crew.dispatch

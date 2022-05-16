@@ -31,7 +31,7 @@ module Cadence
       crew.each { |pid| stop_worker(signal, pid) }
     end
 
-    def after_fork(block)
+    def after_fork(&block)
       raise 'after_fork can only be called before dispatching the worker' if crew.length.positive?
 
       @after_fork_block = block
