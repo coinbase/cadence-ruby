@@ -91,7 +91,7 @@ describe Cadence::Crew do
           executed = true
         end
 
-        crew.after_fork(after_fork_block)
+        crew.after_fork &after_fork_block
 
         crew.should_receive(:fork) do |&block|
           block.call
