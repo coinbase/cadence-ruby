@@ -140,6 +140,8 @@ class Cadence::Worker
 end
 
 class Cadence::Crew
+    def after_fork(block); end
+
     def dispatch; end
 
     def stop(signal); end

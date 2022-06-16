@@ -66,6 +66,42 @@ describe Cadence::Crew do
       end
     end
 
+    describe 'after_fork' do
+      let(:worker) { Cadence::Worker.new(Cadence::Configuration.new) }
+      let(:crew) { described_class.new(worker, 1) }
+
+      before do
+        allow(worker).to receive(:start) { nil }
+        allow(crew).to receive(:monitor) { nil }
+      end
+
+      it 'skips the after_fork block if not set' do
+        crew.should_receive(:fork) do |&block|
+          expect(worker).to receive(:start)
+          expect(crew.send(:after_fork_block)).to be_nil
+          block.call
+        end
+
+        crew.dispatch
+      end
+
+      it 'executes the after_fork block if set' do
+        executed = false
+        after_fork_block = proc do |worker|
+          executed = true
+        end
+
+        crew.after_fork &after_fork_block
+
+        crew.should_receive(:fork) do |&block|
+          block.call
+          expect(executed).to eq(true)
+          expect(worker).to have_received(:start)
+        end
+
+        crew.dispatch
+      end
+    end
   end
 
   describe 'stop' do

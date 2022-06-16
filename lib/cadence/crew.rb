@@ -31,12 +31,23 @@ module Cadence
       crew.each { |pid| stop_worker(signal, pid) }
     end
 
+    def after_fork(&block)
+      raise 'after_fork can only be called before dispatching the worker' if crew.length.positive?
+
+      @after_fork_block = block
+    end
+
     private
 
+    attr_accessor :after_fork_block
     attr_reader :worker, :crew, :logger
 
     def dispatch_worker
-      pid = fork { worker.start }
+      pid = fork do
+        after_fork_block&.call(worker)
+        worker.start
+      end
+
       crew << pid
 
       Cadence.metrics.gauge("crew.num_workers", crew.size)
@@ -49,7 +60,7 @@ module Cadence
       while crew.length.positive?
         (pid, status) = ::Process.waitpid2(-1)
         crew.delete(pid)
-        
+
         Cadence.metrics.gauge("crew.num_workers", crew.size)
         logger.info "Worker quit. pid: #{pid.to_s}, exitstatus: #{status.exitstatus}, remaining_workers: #{crew.length}"
       end
