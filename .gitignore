@@ -1,4 +1,5 @@
 .bundle/
+./test-ol
 .yardoc
 Gemfile.lock
 _yardoc/
