@@ -4,7 +4,7 @@ require 'cadence/workflow/dispatcher'
 require 'cadence/configuration'
 
 describe Cadence::Workflow::Context do
-    subject { described_class.new(state_manager, dispatcher, metadata, config) }
+    subject { described_class.new(state_manager, dispatcher, metadata, config, query_registry) }
 
     let(:state_manager) { instance_double('Cadence::Workflow::StateManager') }
     let(:dispatcher) { Cadence::Workflow::Dispatcher.new }
@@ -21,6 +21,7 @@ describe Cadence::Workflow::Context do
     end
     let(:metadata) { Cadence::Metadata::Workflow.new(metadata_hash) }
     let(:config) { Cadence::Configuration.new }
+    let(:query_registry) { instance_double('Cadence::Workflow::QueryRegistry') }
 
     describe '#headers' do
       it 'returns metadata headers' do

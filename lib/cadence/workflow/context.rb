@@ -17,9 +17,10 @@ module Cadence
     class Context
       attr_reader :metadata
 
-      def initialize(state_manager, dispatcher, metadata, config)
+      def initialize(state_manager, dispatcher, metadata, config, query_registry)
         @state_manager = state_manager
         @dispatcher = dispatcher
+        @query_registry = query_registry
         @metadata = metadata
         @config = config
       end
@@ -227,6 +228,10 @@ module Cadence
         end
       end
 
+      def on_query(query, &block)
+        query_registry.register(query, &block)
+      end
+
       def cancel_activity(activity_id)
         decision = Decision::RequestActivityCancellation.new(activity_id: activity_id)
 
@@ -246,7 +251,7 @@ module Cadence
 
       private
 
-      attr_reader :state_manager, :dispatcher, :config
+      attr_reader :state_manager, :dispatcher, :config, :query_registry
 
       def schedule_decision(decision)
         state_manager.schedule(decision)

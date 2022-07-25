@@ -14,15 +14,21 @@ module Cadence
         reject: CadenceThrift::WorkflowIdReusePolicy::RejectDuplicate
       }.freeze
 
+      QUERY_REJECT_CONDITION = {
+        # none: CadenceThrift::QueryRejectCondition::NONE,
+        not_open: CadenceThrift::QueryRejectCondition::NOT_OPEN,
+        not_completed_cleanly: CadenceThrift::QueryRejectCondition::NOT_COMPLETED_CLEANLY
+      }.freeze
+
       DEFAULT_OPTIONS = {
         polling_ttl: 60, # 1 minute
         max_page_size: 100
       }.freeze
 
       HISTORY_EVENT_FILTER = {
-         all: CadenceThrift::HistoryEventFilterType::ALL_EVENT,
-         close: CadenceThrift::HistoryEventFilterType::CLOSE_EVENT,
-       }.freeze
+        all: CadenceThrift::HistoryEventFilterType::ALL_EVENT,
+        close: CadenceThrift::HistoryEventFilterType::CLOSE_EVENT,
+      }.freeze
 
       def initialize(host, port, identity, options = {})
         @url = "http://#{host}:#{port}"
@@ -345,8 +351,39 @@ module Cadence
         raise NotImplementedError
       end
 
-      def query_workflow
-        raise NotImplementedError
+      def query_workflow(domain:, workflow_id:, run_id:, query:, args: nil, query_reject_condition: nil)
+        request = CadenceThrift::QueryWorkflowRequest.new(
+          domain: domain,
+          execution: CadenceThrift::WorkflowExecution.new(
+            workflow_id: workflow_id,
+            run_id: run_id
+          ),
+          query: CadenceThrift::WorkflowQuery.new(
+            query_type: query,
+            query_args: args.to_json
+          )
+        )
+        if query_reject_condition
+          condition = QUERY_REJECT_CONDITION[query_reject_condition]
+          raise Client::ArgumentError, 'Unknown query_reject_condition specified' unless condition
+
+          request.query_reject_condition = condition
+        end
+
+        begin
+          response = client.query_workflow(request)
+        rescue ::GRPC::InvalidArgument => e
+          raise Cadence::QueryFailed, e.details
+        end
+
+        if response.query_rejected
+          rejection_status = response.query_rejected.status || 'not specified by server'
+          raise Cadence::QueryFailed, "Query rejected: status #{rejection_status}"
+        elsif !response.query_result
+          raise Cadence::QueryFailed, 'Invalid response from server'
+        else
+          response.query_result.from_json
+        end
       end
 
       def describe_workflow_execution(domain:, workflow_id:, run_id:)
@@ -389,9 +426,9 @@ module Cadence
 
       def connection
         @connection ||= begin
-          protocol = ::Thrift::BinaryProtocol.new(transport)
-          CadenceThrift::WorkflowService::Client.new(protocol)
-        end
+                          protocol = ::Thrift::BinaryProtocol.new(transport)
+                          CadenceThrift::WorkflowService::Client.new(protocol)
+                        end
       end
 
       def send_request(name, request)
@@ -413,7 +450,7 @@ module Cadence
         CadenceThrift::StartTimeFilter.new(
           earliestTime: Cadence::Utils.time_to_nanos(from).to_i,
           latestTime: Cadence::Utils.time_to_nanos(to).to_i,
-        )
+          )
       end
 
       def serialize_execution_filter(value)
