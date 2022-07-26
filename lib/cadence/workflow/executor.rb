@@ -50,6 +50,14 @@ module Cadence
 
       attr_reader :workflow_class, :dispatcher, :state_manager, :metadata, :history, :config, :query_registry
 
+      def process_query(query)
+        result = query_registry.handle(query.query_type, query.query_args)
+
+        QueryResult.answer(result)
+      rescue StandardError => error
+        QueryResult.failure(error)
+      end
+
       def execute_workflow(input, workflow_started_event_attributes)
         metadata = generate_workflow_metadata_from(workflow_started_event_attributes)
         context = Workflow::Context.new(state_manager, dispatcher, metadata, config, query_registry)
