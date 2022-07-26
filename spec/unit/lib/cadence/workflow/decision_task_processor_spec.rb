@@ -11,7 +11,9 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
   subject { described_class.new(task, domain, lookup, middleware_chain, config) }
 
-  let(:task) { Fabricate(:decision_task_thrift) }
+  let(:query) { nil }
+  let(:queries) { nil }
+  let(:task) { Fabricate(:api_workflow_task, { workflow_type: api_workflow_type, query: query, queries: queries }.compact) }
   let(:domain) { 'test-domain' }
   let(:lookup) { Cadence::ExecutableLookup.new }
   let(:connection) do

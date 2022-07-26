@@ -343,8 +343,17 @@ module Cadence
         raise NotImplementedError
       end
 
-      def respond_query_task_completed
-        raise NotImplementedError
+      def respond_query_task_completed(namespace:, task_token:, query_result:)
+        query_result_proto = Serializer.serialize(query_result)
+      request = CadenceThrift::RespondQueryTaskCompletedRequest.new(
+          task_token: task_token,
+          namespace: namespace,
+          completed_type: query_result_proto.result_type,
+          query_result: query_result_proto.answer,
+          error_message: query_result_proto.error_message,
+          )
+
+        client.respond_query_task_completed(request)
       end
 
       def reset_sticky_task_list
@@ -360,7 +369,7 @@ module Cadence
           ),
           query: CadenceThrift::WorkflowQuery.new(
             query_type: query,
-            query_args: args.to_json
+            query_args: JSON.serialize(args)
           )
         )
         if query_reject_condition
@@ -372,7 +381,7 @@ module Cadence
 
         begin
           response = client.query_workflow(request)
-        rescue ::GRPC::InvalidArgument => e
+        rescue Cadence::InvalidArgument => e
           raise Cadence::QueryFailed, e.details
         end
 
@@ -382,7 +391,7 @@ module Cadence
         elsif !response.query_result
           raise Cadence::QueryFailed, 'Invalid response from server'
         else
-          response.query_result.from_json
+          JSON.deserialize(response.query_result)
         end
       end
 

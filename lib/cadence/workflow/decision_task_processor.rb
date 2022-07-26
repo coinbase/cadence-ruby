@@ -7,7 +7,19 @@ require 'cadence/error_handler'
 module Cadence
   class Workflow
     class DecisionTaskProcessor
+      Query = Struct.new(:query) do
+
+        def query_type
+          query.query_type
+        end
+
+        def query_args
+          JSON.deserialize(query.query_args)
+        end
+      end
+
       MAX_FAILED_ATTEMPTS = 50
+      LEGACY_QUERY_KEY = :legacy_query
 
       def initialize(task, domain, workflow_lookup, middleware_chain, config)
         @task = task
@@ -39,7 +51,14 @@ module Cadence
           executor.run
         end
 
-        complete_task(decisions)
+        query_results = executor.process_queries(parse_queries)
+
+        if legacy_query_task?
+          complete_query(query_results[LEGACY_QUERY_KEY])
+        else
+          complete_task(commands, query_results)
+        end
+
       rescue StandardError => error
         fail_task(error.inspect)
         Cadence.logger.debug(error.backtrace.join("\n"))
@@ -86,16 +105,44 @@ module Cadence
         Workflow::History.new(events)
       end
 
-      def complete_task(decisions)
+      def legacy_query_task?
+        !!task.query
+      end
+
+      def parse_queries
+        # Support for deprecated query style
+        if legacy_query_task?
+          { LEGACY_QUERY_KEY => Query.new(task.query) }
+        else
+          task.queries.each_with_object({}) do |(query_id, query), result|
+            result[query_id] = Query.new(query)
+          end
+        end
+      end
+
+      def complete_task(commands, query_results)
         Cadence.logger.info("Decision task for #{workflow_name} completed")
 
-        connection.respond_decision_task_completed(
+        connection.respond_workflow_task_completed(
+          namespace: namespace,
           task_token: task_token,
-          decisions: serialize_decisions(decisions)
+          commands: commands,
+          query_results: query_results
+        )
+      end
+
+      def complete_query(result)
+        Cadence.logger.info("Workflow Query task completed", metadata.to_h)
+
+        connection.respond_query_task_completed(
+          namespace: namespace,
+          task_token: task_token,
+          query_result: result
         )
       rescue StandardError => error
-        Cadence.logger.error("Unable to complete Decision task #{workflow_name}: #{error.inspect}")
-        Cadence::ErrorHandler.handle(error, metadata: metadata)
+        Cadence.logger.error("Unable to complete a query", metadata.to_h.merge(error: error.inspect))
+
+        Cadence::ErrorHandler.handle(error, config, metadata: metadata)
       end
 
       def fail_task(message)
