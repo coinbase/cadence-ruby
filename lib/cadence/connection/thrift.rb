@@ -148,11 +148,12 @@ module Cadence
         send_request('PollForDecisionTask', request)
       end
 
-      def respond_decision_task_completed(task_token:, decisions:)
+      def respond_decision_task_completed(task_token:, decisions:, query_results:)
         request = CadenceThrift::RespondDecisionTaskCompletedRequest.new(
           identity: identity,
           taskToken: task_token,
-          decisions: Array(decisions)
+          decisions: Array(decisions),
+          queryResults: query_results
         )
         send_request('RespondDecisionTaskCompleted', request)
       end
@@ -343,15 +344,14 @@ module Cadence
         raise NotImplementedError
       end
 
-      def respond_query_task_completed(namespace:, task_token:, query_result:)
+      def respond_query_task_completed(task_token:, query_result:)
         query_result_proto = Serializer.serialize(query_result)
-      request = CadenceThrift::RespondQueryTaskCompletedRequest.new(
-          task_token: task_token,
-          namespace: namespace,
-          completed_type: query_result_proto.result_type,
-          query_result: query_result_proto.answer,
-          error_message: query_result_proto.error_message,
-          )
+        request = CadenceThrift::RespondQueryTaskCompletedRequest.new(
+          taskToken: task_token,
+          completedType: query_result_proto.result_type,
+          queryResult: query_result_proto.answer,
+          errorMessage: query_result_proto.error_message,
+        )
 
         client.respond_query_task_completed(request)
       end
@@ -459,7 +459,7 @@ module Cadence
         CadenceThrift::StartTimeFilter.new(
           earliestTime: Cadence::Utils.time_to_nanos(from).to_i,
           latestTime: Cadence::Utils.time_to_nanos(to).to_i,
-          )
+        )
       end
 
       def serialize_execution_filter(value)

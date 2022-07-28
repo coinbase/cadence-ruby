@@ -1,4 +1,5 @@
 require 'cadence/workflow/decision'
+require 'cadence/workflow/query_result'
 require 'cadence/workflow/serializer/schedule_activity'
 require 'cadence/workflow/serializer/start_child_workflow'
 require 'cadence/workflow/serializer/request_activity_cancellation'
@@ -7,6 +8,8 @@ require 'cadence/workflow/serializer/start_timer'
 require 'cadence/workflow/serializer/cancel_timer'
 require 'cadence/workflow/serializer/complete_workflow'
 require 'cadence/workflow/serializer/fail_workflow'
+require 'cadence/workflow/serializer/query_answer'
+require 'cadence/workflow/serializer/query_failure'
 
 module Cadence
   class Workflow
@@ -19,7 +22,9 @@ module Cadence
         Workflow::Decision::StartTimer => Serializer::StartTimer,
         Workflow::Decision::CancelTimer => Serializer::CancelTimer,
         Workflow::Decision::CompleteWorkflow => Serializer::CompleteWorkflow,
-        Workflow::Decision::FailWorkflow => Serializer::FailWorkflow
+        Workflow::Decision::FailWorkflow => Serializer::FailWorkflow,
+        Workflow::QueryResult::Answer => Serializer::QueryAnswer,
+        Workflow::QueryResult::Failure => Serializer::QueryFailure,
       }.freeze
 
       def self.serialize(object)

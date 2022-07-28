@@ -123,11 +123,10 @@ module Cadence
       def complete_task(commands, query_results)
         Cadence.logger.info("Decision task for #{workflow_name} completed")
 
-        connection.respond_workflow_task_completed(
-          namespace: namespace,
+        connection.respond_decision_task_completed(
           task_token: task_token,
-          commands: commands,
-          query_results: query_results
+          # not sure what to put as the decisions here
+          decisions: query_results
         )
       end
 
