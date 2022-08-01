@@ -72,7 +72,7 @@ module Cadence
       private
 
       attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class,
-        :middleware_chain, :config, :metadata
+                  :middleware_chain, :config, :metadata
 
       def connection
         @connection ||= Cadence::Connection.generate(config.for_connection)
@@ -125,8 +125,8 @@ module Cadence
 
         connection.respond_decision_task_completed(
           task_token: task_token,
-          # not sure what to put as the decisions here
-          decisions: query_results
+          decisions: serialize_decisions(decisions),
+          query_results: query_results
         )
       end
 
@@ -134,7 +134,6 @@ module Cadence
         Cadence.logger.info("Workflow Query task completed", metadata.to_h)
 
         connection.respond_query_task_completed(
-          namespace: namespace,
           task_token: task_token,
           query_result: result
         )

@@ -6,16 +6,15 @@ describe Cadence::Workflow::Serializer::QueryAnswer do
   class TestDeserializer
   end
 
-  describe 'to_proto' do
+  describe 'to_thrift' do
     let(:query_result) { Cadence::Workflow::QueryResult.answer(42) }
-    it 'produces a protobuf' do
-      result = described_class.new(query_result).to_proto
+    it 'produces a thrift object' do
+      result = described_class.new(query_result).to_thrift
 
       expect(result).to be_a(CadenceThrift::WorkflowQueryResult)
-      expect(result.result_type).to eq(CadenceThrift::QueryResultType.lookup(
-        CadenceThrift::QueryResultType::ANSWERED)
-                                    )
-      expect(result.answer).to eq(JSON.serialize(42))
+      expect(result.resultType).to eq(CadenceThrift::QueryResultType::ANSWERED
+                                   )
+      expect(result.answer).to eq("42")
     end
   end
 end

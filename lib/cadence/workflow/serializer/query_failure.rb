@@ -4,10 +4,10 @@ module Cadence
   class Workflow
     module Serializer
       class QueryFailure < Base
-        def to_proto
+        def to_thrift
           CadenceThrift::WorkflowQueryResult.new(
-            result_type: CadenceThrift::QueryResultType::FAILED,
-            error_message: object.error.message
+            resultType: CadenceThrift::QueryResultType::FAILED,
+            errorReason: object.error.message
           )
         end
       end

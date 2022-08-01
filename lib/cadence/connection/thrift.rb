@@ -148,12 +148,12 @@ module Cadence
         send_request('PollForDecisionTask', request)
       end
 
-      def respond_decision_task_completed(task_token:, decisions:, query_results:)
+      def respond_decision_task_completed(task_token:, decisions:, query_results: {})
         request = CadenceThrift::RespondDecisionTaskCompletedRequest.new(
           identity: identity,
           taskToken: task_token,
           decisions: Array(decisions),
-          queryResults: query_results
+          queryResults: query_results.transform_values { |value| Serializer.serialize(value) }
         )
         send_request('RespondDecisionTaskCompleted', request)
       end
@@ -345,12 +345,12 @@ module Cadence
       end
 
       def respond_query_task_completed(task_token:, query_result:)
-        query_result_proto = Serializer.serialize(query_result)
+        query_result_thrift = Serializer.serialize(query_result)
         request = CadenceThrift::RespondQueryTaskCompletedRequest.new(
           taskToken: task_token,
-          completedType: query_result_proto.result_type,
-          queryResult: query_result_proto.answer,
-          errorMessage: query_result_proto.error_message,
+          completedType: query_result_thrift.result_type,
+          queryResult: query_result_thrift.answer,
+          errorMessage: query_result_thrift.error_message,
         )
 
         client.respond_query_task_completed(request)
