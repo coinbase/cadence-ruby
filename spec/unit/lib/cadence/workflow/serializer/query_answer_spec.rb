@@ -14,7 +14,7 @@ describe Cadence::Workflow::Serializer::QueryAnswer do
       expect(result).to be_a(CadenceThrift::WorkflowQueryResult)
       expect(result.resultType).to eq(CadenceThrift::QueryResultType::ANSWERED
                                    )
-      expect(result.answer).to eq("42")
+      expect(result.answer).to eq(Cadence::JSON.serialize("42"))
     end
   end
 end
