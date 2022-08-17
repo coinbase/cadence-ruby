@@ -76,8 +76,9 @@ module Cadence
     end
 
     def query_workflow(workflow, query, workflow_id, run_id, *args, domain: nil, query_reject_condition: nil)
+      execution_options = ExecutionOptions.new(workflow, {}, config.default_execution_options)
       connection.query_workflow(
-        domain: domain || workflow.domain,
+        domain: domain || execution_options.domain,
         workflow_id: workflow_id,
         run_id: run_id,
         query: query,

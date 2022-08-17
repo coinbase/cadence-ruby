@@ -364,12 +364,12 @@ module Cadence
         request = CadenceThrift::QueryWorkflowRequest.new(
           domain: domain,
           execution: CadenceThrift::WorkflowExecution.new(
-            workflow_id: workflow_id,
-            run_id: run_id
+            workflowId: workflow_id,
+            runId: run_id
           ),
           query: CadenceThrift::WorkflowQuery.new(
-            query_type: query,
-            query_args: JSON.serialize(args)
+            queryType: query,
+            queryArgs: JSON.serialize(args)
           )
         )
         if query_reject_condition
@@ -381,7 +381,9 @@ module Cadence
 
         begin
           response = client.query_workflow(request)
-        rescue Cadence::InvalidArgument => e
+          # rescue InvalidArgument => e doesn't seem to work
+          #
+        rescue InvalidArgumentError => e
           raise Cadence::QueryFailed, e.details
         end
 

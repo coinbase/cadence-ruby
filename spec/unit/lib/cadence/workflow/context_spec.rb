@@ -3,6 +3,8 @@ require 'cadence/workflow/context'
 require 'cadence/workflow/dispatcher'
 require 'cadence/configuration'
 
+class MyTestWorkflow < Cadence::Workflow; end
+
 describe Cadence::Workflow::Context do
   subject { described_class.new(state_manager, dispatcher, metadata, config, query_registry) }
 
@@ -26,9 +28,9 @@ describe Cadence::Workflow::Context do
     Cadence::Workflow::Context.new(
       state_manager,
       dispatcher,
-      query_registry,
       metadata,
-      Cadence.configuration
+      Cadence.configuration,
+      query_registry,
     )
   end
 
@@ -48,7 +50,7 @@ describe Cadence::Workflow::Context do
 
   describe '#headers' do
     it 'returns metadata headers' do
-      expect(subject.headers).to eq('TestHeader' => 'Value')
+      expect(workflow_context.headers).to eq('TestHeader' => 'Value')
     end
   end
 

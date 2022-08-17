@@ -1,4 +1,4 @@
-require 'examples/workflows/query_workflow'
+require 'workflows/query_workflow'
 require 'cadence/errors'
 
 

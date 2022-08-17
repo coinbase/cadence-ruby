@@ -51,7 +51,7 @@ module Cadence
       attr_reader :workflow_class, :dispatcher, :state_manager, :metadata, :history, :config, :query_registry
 
       def process_query(query)
-        result = query_registry.handle(query.query_type, query.query_args)
+        result = query_registry.handle(query.queryType, query.queryArgs)
 
         QueryResult.answer(result)
       rescue StandardError => error

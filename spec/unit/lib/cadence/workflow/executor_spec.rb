@@ -82,9 +82,9 @@ describe Cadence::Workflow::Executor do
     let(:query_2_error) { StandardError.new('Test query failure') }
     let(:queries) do
       {
-        '1' => Cadence::Workflow::DecisionTaskProcessor::Query.new(Fabricate(:api_workflow_query, query_type: 'success')),
-        '2' => Cadence::Workflow::DecisionTaskProcessor::Query.new(Fabricate(:api_workflow_query, query_type: 'failure')),
-        '3' => Cadence::Workflow::DecisionTaskProcessor::Query.new(Fabricate(:api_workflow_query, query_type: 'unknown')),
+        '1' => Cadence::Workflow::DecisionTaskProcessor::Query.new(Fabricate(:api_workflow_query, queryType: 'success')),
+        '2' => Cadence::Workflow::DecisionTaskProcessor::Query.new(Fabricate(:api_workflow_query, queryType: 'failure')),
+        '3' => Cadence::Workflow::DecisionTaskProcessor::Query.new(Fabricate(:api_workflow_query, queryType: 'unknown')),
       }
     end
 
