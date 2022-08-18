@@ -17,6 +17,7 @@ module Cadence
 
       def handle(type, args = nil)
         handler = handlers[type]
+        puts(handler)
 
         unless handler
           raise Cadence::QueryFailed, "Workflow did not register a handler for #{type}"

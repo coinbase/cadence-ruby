@@ -4,7 +4,6 @@ module Cadence
   class Workflow
     module Serializer
       class QueryAnswer < Base
-
         def to_thrift
           CadenceThrift::WorkflowQueryResult.new(
             resultType: CadenceThrift::QueryResultType::ANSWERED,

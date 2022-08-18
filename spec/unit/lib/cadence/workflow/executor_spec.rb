@@ -96,7 +96,6 @@ describe Cadence::Workflow::Executor do
 
     it 'returns query results' do
       results = subject.process_queries(queries)
-
       expect(results.length).to eq(3)
       expect(results['1']).to be_a(Cadence::Workflow::QueryResult::Answer)
       expect(results['1'].result).to eq(query_1_result)

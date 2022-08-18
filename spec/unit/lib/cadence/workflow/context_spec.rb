@@ -2,6 +2,7 @@ require 'cadence/testing/local_workflow_context'
 require 'cadence/workflow/context'
 require 'cadence/workflow/dispatcher'
 require 'cadence/configuration'
+require 'cadence/metadata/workflow'
 
 class MyTestWorkflow < Cadence::Workflow; end
 
@@ -21,7 +22,7 @@ describe Cadence::Workflow::Context do
       headers: { 'TestHeader' => 'Value' }
     }
   end
-  let(:metadata) { Cadence::Workflow.new(metadata_hash) }
+  let(:metadata) { Cadence::Metadata::Workflow.new(metadata_hash) }
   let(:config) { Cadence::Configuration.new }
   let(:query_registry) { instance_double('Cadence::Workflow::QueryRegistry') }
   let(:workflow_context) do

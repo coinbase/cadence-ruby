@@ -43,6 +43,7 @@ module Cadence
       #
       # @return [Hash<String, Cadence::Workflow::QueryResult>]
       def process_queries(queries = {})
+        puts("I made it to process queries")
         queries.transform_values(&method(:process_query))
       end
 
@@ -51,8 +52,7 @@ module Cadence
       attr_reader :workflow_class, :dispatcher, :state_manager, :metadata, :history, :config, :query_registry
 
       def process_query(query)
-        result = query_registry.handle(query.queryType, query.queryArgs)
-
+        result = query_registry.handle(query.query_type, query.query_args)
         QueryResult.answer(result)
       rescue StandardError => error
         QueryResult.failure(error)

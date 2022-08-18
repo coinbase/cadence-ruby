@@ -10,11 +10,11 @@ module Cadence
       Query = Struct.new(:query) do
 
         def query_type
-          query.query_type
+          query.queryType
         end
 
         def query_args
-          JSON.deserialize(query.query_args)
+          JSON.deserialize(query.queryArgs)
         end
       end
 
