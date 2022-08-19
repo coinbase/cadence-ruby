@@ -42,7 +42,7 @@ module Cadence
       end
 
       def decision_metadata_from(task, domain)
-        puts(task.workflowType.class)
+        puts(task.workflowType.instance_variables)
         Metadata::Decision.new(
           domain: domain,
           id: task.startedEventId,

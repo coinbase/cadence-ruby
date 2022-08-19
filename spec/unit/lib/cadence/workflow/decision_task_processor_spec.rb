@@ -13,8 +13,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
   let(:query) { nil }
   let(:queries) { nil }
-  let(:task) { Fabricate(:decision_task_thrift, { workflowType: :workflow_type_thrift, query: query, queries: queries }.compact) }
-  # let(:task) { Fabricate(:decision_task_thrift) }
+  let(:task) { Fabricate(:decision_task_thrift, { workflowType: workflow_type_thrift, query: query, queries: queries }.compact) }
   let(:workflow_type_thrift) { Fabricate(:workflow_type_thrift, name: workflow_name) }
   let(:workflow_name) { 'TestWorkflow' }
   let(:domain) { 'test-domain' }
@@ -207,15 +206,4 @@ describe Cadence::Workflow::DecisionTaskProcessor do
       expect(connection).not_to have_received(:respond_decision_task_failed)
     end
   end
-
-  context 'when workflow task queries are included' do
-    let(:query_id) { SecureRandom.uuid }
-    let(:query_result) { Cadence::Workflow::QueryResult.answer(42) }
-
-    let(:queries) do
-    end
-    CadenceThrift::Map.new(:string, :message, CadenceThrift::WorkflowQuery).tap do |map|
-        map[query_id] = Fabricate(:api_workflow_query)
-      end
-    end
 end

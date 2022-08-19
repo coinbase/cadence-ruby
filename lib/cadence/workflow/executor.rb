@@ -43,7 +43,6 @@ module Cadence
       #
       # @return [Hash<String, Cadence::Workflow::QueryResult>]
       def process_queries(queries = {})
-        puts("I made it to process queries")
         queries.transform_values(&method(:process_query))
       end
 

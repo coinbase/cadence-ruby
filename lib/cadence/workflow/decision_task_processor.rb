@@ -56,7 +56,7 @@ module Cadence
         if legacy_query_task?
           complete_query(query_results[LEGACY_QUERY_KEY])
         else
-          complete_task(commands, query_results)
+          complete_task(decisions, query_results)
         end
 
       rescue StandardError => error
@@ -114,13 +114,14 @@ module Cadence
         if legacy_query_task?
           { LEGACY_QUERY_KEY => Query.new(task.query) }
         else
+          return {} if task.queries.nil?
           task.queries.each_with_object({}) do |(query_id, query), result|
             result[query_id] = Query.new(query)
           end
         end
       end
 
-      def complete_task(commands, query_results)
+      def complete_task(decisions, query_results)
         Cadence.logger.info("Decision task for #{workflow_name} completed")
 
         connection.respond_decision_task_completed(
