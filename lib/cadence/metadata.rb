@@ -42,6 +42,7 @@ module Cadence
       end
 
       def decision_metadata_from(task, domain)
+        puts(task.workflowType.class)
         Metadata::Decision.new(
           domain: domain,
           id: task.startedEventId,
@@ -49,6 +50,7 @@ module Cadence
           attempt: task.attempt,
           workflow_run_id: task.workflowExecution.runId,
           workflow_id: task.workflowExecution.workflowId,
+          # task.workflowType.name
           workflow_name: task.workflowType.name
         )
       end

@@ -381,9 +381,10 @@ module Cadence
 
         begin
           response = client.query_workflow(request)
+          puts(response)
           # rescue InvalidArgument => e doesn't seem to work
           #
-        rescue InvalidArgumentError => e
+        rescue Error => e
           raise Cadence::QueryFailed, e.details
         end
 

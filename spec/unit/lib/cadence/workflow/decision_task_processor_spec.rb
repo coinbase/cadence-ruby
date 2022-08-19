@@ -13,9 +13,10 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
   let(:query) { nil }
   let(:queries) { nil }
-  # let(:task) { Fabricate(:api_workflow_task, { workflow_type: api_workflow_type, query: query, queries: queries }.compact) }
-  let(:task) { Fabricate(:decision_task_thrift) }
-  # let(:api_workflow_type) { Fabricate(:api_workflow_type, name: workflow_name) }
+  let(:task) { Fabricate(:decision_task_thrift, { workflowType: :workflow_type_thrift, query: query, queries: queries }.compact) }
+  # let(:task) { Fabricate(:decision_task_thrift) }
+  let(:workflow_type_thrift) { Fabricate(:workflow_type_thrift, name: workflow_name) }
+  let(:workflow_name) { 'TestWorkflow' }
   let(:domain) { 'test-domain' }
   let(:lookup) { Cadence::ExecutableLookup.new }
   let(:connection) do
@@ -40,7 +41,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
     allow(Cadence.logger).to receive(:error)
     allow(Cadence.logger).to receive(:debug)
     allow(Cadence::ErrorHandler).to receive(:handle)
-
+    allow(connection).to receive(:respond_query_task_completed)
     allow(Cadence::Metadata)
       .to receive(:generate)
       .with(Cadence::Metadata::DECISION_TYPE, task, domain)
@@ -55,6 +56,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
         .to receive(:new)
         .with(TestWorkflow, an_instance_of(Cadence::Workflow::History), metadata, config)
         .and_return(executor)
+      allow(executor).to receive(:process_queries)
     end
 
     it 'runs the workflow executor' do
@@ -205,4 +207,15 @@ describe Cadence::Workflow::DecisionTaskProcessor do
       expect(connection).not_to have_received(:respond_decision_task_failed)
     end
   end
+
+  context 'when workflow task queries are included' do
+    let(:query_id) { SecureRandom.uuid }
+    let(:query_result) { Cadence::Workflow::QueryResult.answer(42) }
+
+    let(:queries) do
+    end
+    CadenceThrift::Map.new(:string, :message, CadenceThrift::WorkflowQuery).tap do |map|
+        map[query_id] = Fabricate(:api_workflow_query)
+      end
+    end
 end

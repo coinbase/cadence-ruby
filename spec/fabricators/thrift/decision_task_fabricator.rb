@@ -14,4 +14,5 @@ Fabricator(:decision_task_thrift, from: CadenceThrift::PollForDecisionTaskRespon
   history { Fabricate(:history_thrift) }
   nextPageToken nil
   attempt 1
+  query { nil }
 end
