@@ -16,6 +16,7 @@ describe Cadence::Activity::TaskProcessor do
   let(:middleware_chain) { Cadence::Middleware::Chain.new }
   let(:config) { Cadence::Configuration.new }
   let(:input) { ['arg1', 'arg2'] }
+  let(:go_client_input) { "123\n\"abc\"" }
 
   describe '#process' do
     let(:context) { instance_double('Cadence::Activity::Context', async?: false) }
@@ -38,6 +39,21 @@ describe Cadence::Activity::TaskProcessor do
       allow(middleware_chain).to receive(:invoke).and_call_original
 
       allow(Cadence.metrics).to receive(:timing)
+    end
+
+    context 'when input comes from go client' do
+      let(:activity_class) { double('Cadence::Activity', execute_in_context: nil) }
+      let(:task) { Fabricate(:activity_task_thrift, activity_name: activity_name, input: go_client_input) }
+
+      before do
+        allow(lookup).to receive(:find).with(activity_name).and_return(activity_class)
+      end
+
+      it 'successfully deserializes the input and ran the activity' do
+        subject.process
+
+        expect(activity_class).to have_received(:execute_in_context).with(context, [123, 'abc'])
+      end
     end
 
     context 'when activity is not registered' do
