@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.1.14
+## 0.1.16
+- Add activity task deserialization logic that is compatible with official go implementation
+
+## 0.1.15
 - Add rbi definition for Cadence::Crew
 
 ## 0.1.14
