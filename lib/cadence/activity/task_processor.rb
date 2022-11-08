@@ -3,10 +3,13 @@ require 'cadence/activity/context'
 require 'cadence/json'
 require 'cadence/connection'
 require 'cadence/error_handler'
+require 'cadence/concerns/input_deserializer'
 
 module Cadence
   class Activity
     class TaskProcessor
+      include Cadence::Concerns::InputDeserializer
+
       def initialize(task, domain, activity_lookup, middleware_chain, config)
         @task = task
         @domain = domain
@@ -78,25 +81,6 @@ module Cadence
       rescue StandardError => error
         Cadence.logger.error("Unable to fail Activity #{activity_name}: #{error.inspect}")
         Cadence::ErrorHandler.handle(error, metadata: metadata)
-      end
-
-      def deserialize(input)
-        JSON.deserialize(task.input)
-      rescue Oj::ParseError
-        # cadence official go-client serializes / deserializes input in a different format than this ruby client
-        # adding additional deserialization logic here to help read input that is passed from go-client
-        # https://github.com/uber-go/cadence-client/blob/0.18.x/internal/encoding.go#L45-L58
-        #
-        # this ruby client serializes / deserializes everything as one big string like below:
-        # [1012474654, "second input"]
-        #
-        # while go client serializes input as separate input followed by line break
-        # 1012474654
-        # second input
-        args = input.split(/\n/)
-        res = args.map do |arg|
-          JSON.deserialize(arg)
-        end
       end
     end
   end
