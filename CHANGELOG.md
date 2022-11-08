@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.17
+- Add workflow decision task deserialization logic that is compatible with official go implementation
+
 ## 0.1.16
 - Add activity task deserialization logic that is compatible with official go implementation
 

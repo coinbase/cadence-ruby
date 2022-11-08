@@ -3,10 +3,13 @@ require 'cadence/errors'
 require 'cadence/workflow/decision'
 require 'cadence/workflow/decision_state_machine'
 require 'cadence/workflow/history/event_target'
+require 'cadence/concerns/input_deserializer'
 
 module Cadence
   class Workflow
     class StateManager
+      include Cadence::Concerns::InputDeserializer
+
       SIDE_EFFECT_MARKER = 'SIDE_EFFECT'.freeze
       RELEASE_MARKER = 'RELEASE'.freeze
 
@@ -319,7 +322,7 @@ module Cadence
       end
 
       def safe_parse(binary)
-        JSON.deserialize(binary)
+        deserialize(binary)
       end
     end
   end
