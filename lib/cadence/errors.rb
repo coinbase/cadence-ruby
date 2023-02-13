@@ -18,4 +18,9 @@ module Cadence
   # A superclass for activity exceptions raised explicitly
   # with the itent to propagate to a workflow
   class ActivityException < ClientError; end
+
+  class ApiError < Error; end
+
+  class QueryFailed < ApiError; end
+
 end

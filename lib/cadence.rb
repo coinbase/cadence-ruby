@@ -12,6 +12,7 @@ module Cadence
                  :schedule_workflow,
                  :register_domain,
                  :signal_workflow,
+                 :query_workflow,
                  :reset_workflow,
                  :terminate_workflow,
                  :fetch_workflow_execution_info,

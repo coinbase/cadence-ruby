@@ -75,6 +75,18 @@ module Cadence
       )
     end
 
+    def query_workflow(workflow, query, workflow_id, run_id, *args, domain: nil, query_reject_condition: nil)
+      execution_options = ExecutionOptions.new(workflow, {}, config.default_execution_options)
+      connection.query_workflow(
+        domain: domain || execution_options.domain,
+        workflow_id: workflow_id,
+        run_id: run_id,
+        query: query,
+        args: args,
+        query_reject_condition: query_reject_condition
+      )
+    end
+
     def reset_workflow(domain, workflow_id, run_id, strategy: nil, decision_task_id: nil, reason: 'manual reset')
       # Pick default strategy for backwards-compatibility
       strategy ||= :last_decision_task unless decision_task_id

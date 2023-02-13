@@ -11,7 +11,11 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
   subject { described_class.new(task, domain, lookup, middleware_chain, config) }
 
-  let(:task) { Fabricate(:decision_task_thrift) }
+  let(:query) { nil }
+  let(:queries) { nil }
+  let(:task) { Fabricate(:decision_task_thrift, { workflowType: workflow_type_thrift, query: query, queries: queries }.compact) }
+  let(:workflow_type_thrift) { Fabricate(:workflow_type_thrift, name: workflow_name) }
+  let(:workflow_name) { 'TestWorkflow' }
   let(:domain) { 'test-domain' }
   let(:lookup) { Cadence::ExecutableLookup.new }
   let(:connection) do
@@ -36,7 +40,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
     allow(Cadence.logger).to receive(:error)
     allow(Cadence.logger).to receive(:debug)
     allow(Cadence::ErrorHandler).to receive(:handle)
-
+    allow(connection).to receive(:respond_query_task_completed)
     allow(Cadence::Metadata)
       .to receive(:generate)
       .with(Cadence::Metadata::DECISION_TYPE, task, domain)
@@ -51,6 +55,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
         .to receive(:new)
         .with(TestWorkflow, an_instance_of(Cadence::Workflow::History), metadata, config)
         .and_return(executor)
+      allow(executor).to receive(:process_queries)
     end
 
     it 'runs the workflow executor' do
