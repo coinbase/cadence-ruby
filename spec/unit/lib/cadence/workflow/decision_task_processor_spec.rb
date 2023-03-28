@@ -9,7 +9,7 @@ require 'cadence/configuration'
 describe Cadence::Workflow::DecisionTaskProcessor do
   class TestWorkflow < Cadence::Workflow; end
 
-  subject { described_class.new(task, domain, lookup, middleware_chain, config) }
+  subject { described_class.new(task, domain, lookup, middleware_chain, workflow_middleware_chain, config) }
 
   let(:task) { Fabricate(:decision_task_thrift) }
   let(:domain) { 'test-domain' }
@@ -23,6 +23,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
   end
   let(:metadata) { Cadence::Metadata.generate(Cadence::Metadata::DECISION_TYPE, task, domain) }
   let(:middleware_chain) { Cadence::Middleware::Chain.new }
+  let(:workflow_middleware_chain) { Cadence::Middleware::Chain.new }
   let(:executor) { instance_double(Cadence::Workflow::Executor, run: []) }
   let(:config) { Cadence::Configuration.new }
 
@@ -49,7 +50,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
       allow(Cadence::Workflow::Executor)
         .to receive(:new)
-        .with(TestWorkflow, an_instance_of(Cadence::Workflow::History), metadata, config)
+        .with(TestWorkflow, an_instance_of(Cadence::Workflow::History), metadata, config, workflow_middleware_chain)
         .and_return(executor)
     end
 

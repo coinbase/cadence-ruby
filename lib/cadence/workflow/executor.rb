@@ -9,13 +9,14 @@ require 'cadence/metadata'
 module Cadence
   class Workflow
     class Executor
-      def initialize(workflow_class, history, metadata, config)
+      def initialize(workflow_class, history, metadata, config, middleware_chain)
         @workflow_class = workflow_class
         @dispatcher = Dispatcher.new
         @state_manager = StateManager.new(dispatcher)
         @metadata = metadata
         @history = history
         @config = config
+        @middleware_chain = middleware_chain
       end
 
       def run
@@ -34,14 +35,16 @@ module Cadence
 
       private
 
-      attr_reader :workflow_class, :dispatcher, :state_manager, :metadata, :history, :config
+      attr_reader :workflow_class, :dispatcher, :state_manager, :metadata, :history, :config, :middleware_chain
 
       def execute_workflow(input, workflow_started_event_attributes)
         metadata = generate_workflow_metadata_from(workflow_started_event_attributes)
         context = Workflow::Context.new(state_manager, dispatcher, metadata, config)
 
         Fiber.new do
-          workflow_class.execute_in_context(context, input)
+          middleware_chain.invoke(metadata) do
+            workflow_class.execute_in_context(context, input)
+          end
         end.resume
       end
 

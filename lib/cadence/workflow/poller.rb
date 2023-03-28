@@ -11,12 +11,13 @@ module Cadence
         thread_pool_size: 1
       }.freeze
 
-      def initialize(domain, task_list, workflow_lookup, config, middleware = [], options = {})
+      def initialize(domain, task_list, workflow_lookup, config, middleware = [], workflow_middleware = [], options = {})
         @domain = domain
         @task_list = task_list
         @workflow_lookup = workflow_lookup
         @config = config
         @middleware = middleware
+        @workflow_middleware = workflow_middleware
         @options = DEFAULT_OPTIONS.merge(options)
         @shutting_down = false
       end
@@ -38,7 +39,7 @@ module Cadence
 
       private
 
-      attr_reader :domain, :task_list, :connection, :workflow_lookup, :config, :middleware, :options
+      attr_reader :domain, :task_list, :connection, :workflow_lookup, :config, :middleware, :workflow_middleware, :options
 
       def connection
         @connection ||= Cadence::Connection.generate(config.for_connection, options)
@@ -80,8 +81,9 @@ module Cadence
 
       def process(task)
         middleware_chain = Middleware::Chain.new(middleware)
+        workflow_middleware_chain = Middleware::Chain.new(workflow_middleware)
 
-        DecisionTaskProcessor.new(task, domain, workflow_lookup, middleware_chain, config).process
+        DecisionTaskProcessor.new(task, domain, workflow_lookup, middleware_chain, workflow_middleware_chain, config).process
       end
 
       def thread_pool

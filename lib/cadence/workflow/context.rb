@@ -52,7 +52,7 @@ module Cadence
           task_list: execution_options.task_list,
           retry_policy: execution_options.retry_policy,
           timeouts: execution_options.timeouts,
-          headers: execution_options.headers
+          headers: config.header_propagator_chain.inject(execution_options.headers)
         )
 
         target, cancelation_id = schedule_decision(decision)
@@ -110,7 +110,7 @@ module Cadence
           task_list: execution_options.task_list,
           retry_policy: execution_options.retry_policy,
           timeouts: execution_options.timeouts,
-          headers: execution_options.headers
+          headers: config.header_propagator_chain.inject(execution_options.headers)
         )
 
         target, cancelation_id = schedule_decision(decision)
