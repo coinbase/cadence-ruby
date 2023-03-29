@@ -1,9 +1,10 @@
+require 'cadence/middleware/chain'
 require 'cadence/workflow/executor'
 require 'cadence/workflow/history'
 require 'cadence/workflow'
 
 describe Cadence::Workflow::Executor do
-  subject { described_class.new(workflow, history, decision_metadata, config) }
+  subject { described_class.new(workflow, history, decision_metadata, config, middleware_chain) }
 
   let(:workflow_started_event) { Fabricate(:workflow_execution_started_event_thrift, eventId: 1) }
   let(:history) do
@@ -17,6 +18,7 @@ describe Cadence::Workflow::Executor do
   let(:workflow) { TestWorkflow }
   let(:decision_metadata) { Fabricate(:decision_metadata) }
   let(:config) { Cadence::Configuration.new }
+  let(:middleware_chain) { Cadence::Middleware::Chain.new }
 
   class TestWorkflow < Cadence::Workflow
     def execute
@@ -27,6 +29,7 @@ describe Cadence::Workflow::Executor do
   describe '#run' do
     it 'runs a workflow' do
       allow(workflow).to receive(:execute_in_context).and_call_original
+      expect(middleware_chain).to receive(:invoke).and_call_original
 
       subject.run
 

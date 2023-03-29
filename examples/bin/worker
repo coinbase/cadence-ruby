@@ -8,6 +8,10 @@ Dir[File.expand_path('../workflows/*.rb', __dir__)].each { |f| require f }
 Dir[File.expand_path('../activities/*.rb', __dir__)].each { |f| require f }
 Dir[File.expand_path('../middleware/*.rb', __dir__)].each { |f| require f }
 
+Cadence.configure do |config|
+  config.add_header_propagator(SamplePropagator)
+end
+
 worker = Cadence::Worker.new(polling_ttl: 10, thread_pool_size: 20)
 
 worker.register_workflow(AsyncActivityWorkflow)
@@ -49,5 +53,7 @@ worker.register_activity(Trip::RentCarActivity)
 
 worker.add_decision_middleware(LoggingMiddleware, 'EXAMPLE')
 worker.add_activity_middleware(LoggingMiddleware, 'EXAMPLE')
+worker.add_activity_middleware(SamplePropagator)
+worker.add_workflow_middleware(SamplePropagator)
 
 worker.start

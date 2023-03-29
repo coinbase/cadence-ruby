@@ -1,5 +1,7 @@
 require 'logger'
 require 'cadence/metrics_adapters/null'
+require 'cadence/middleware/header_propagator_chain'
+require 'cadence/middleware/entry'
 
 module Cadence
   class Configuration
@@ -7,7 +9,7 @@ module Cadence
     Execution = Struct.new(:domain, :task_list, :timeouts, :headers, keyword_init: true)
 
     attr_reader :timeouts, :error_handlers
-    attr_accessor :connection_type, :host, :port, :logger, :metrics_adapter, :domain, :task_list, :headers
+    attr_accessor :connection_type, :host, :port, :logger, :metrics_adapter, :domain, :task_list, :headers, :header_propagators
 
     DEFAULT_TIMEOUTS = {
       execution: 60,          # End-to-end workflow time
@@ -31,6 +33,7 @@ module Cadence
       @task_list = DEFAULT_TASK_LIST
       @headers = DEFAULT_HEADERS
       @error_handlers = []
+      @header_propagators = []
     end
 
     def timeouts=(new_timeouts)
@@ -56,6 +59,15 @@ module Cadence
         timeouts: timeouts,
         headers: headers
       ).freeze
+    end
+
+    def add_header_propagator(propagator_class, *args)
+      raise 'header propagator must implement `def inject!(headers)`' unless propagator_class.method_defined? :inject!
+      @header_propagators << Middleware::Entry.new(propagator_class, args)
+    end
+
+    def header_propagator_chain
+      Middleware::HeaderPropagatorChain.new(header_propagators)
     end
   end
 end

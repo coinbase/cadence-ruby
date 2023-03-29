@@ -64,6 +64,33 @@ describe Cadence::Client do
           )
       end
 
+      context 'with header propagator' do
+        class TestPropagator
+          def inject!(header)
+            header['test'] = 'asdf'
+          end
+        end
+
+        it 'starts a workflow with context propagated' do
+          config.add_header_propagator(TestPropagator)
+          subject.start_workflow(TestStartWorkflow, 42)
+
+          expect(connection)
+            .to have_received(:start_workflow_execution)
+            .with(
+              domain: 'default-test-domain',
+              workflow_id: an_instance_of(String),
+              workflow_name: 'TestStartWorkflow',
+              task_list: 'default-test-task-list',
+              input: [42],
+              task_timeout: Cadence.configuration.timeouts[:task],
+              execution_timeout: Cadence.configuration.timeouts[:execution],
+              workflow_id_reuse_policy: nil,
+              headers: { 'test' => 'asdf' }
+            )
+        end
+      end
+
       it 'starts a workflow using the options specified' do
         subject.start_workflow(
           TestStartWorkflow,

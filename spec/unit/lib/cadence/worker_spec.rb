@@ -25,6 +25,10 @@ describe Cadence::Worker do
     def call(_); end
   end
 
+  class TestWorkerWorkflowMiddleware
+    def call(_); end
+  end
+
   class TestWorkerActivity < Cadence::Activity
     domain 'default-domain'
     task_list 'default-task-list'
@@ -138,12 +142,12 @@ describe Cadence::Worker do
 
       allow(Cadence::Workflow::Poller)
         .to receive(:new)
-        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [], {})
+        .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [], [], {})
         .and_return(workflow_poller_1)
 
       allow(Cadence::Workflow::Poller)
         .to receive(:new)
-        .with('other-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [], {})
+        .with('other-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [], [], {})
         .and_return(workflow_poller_2)
 
       allow(Cadence::Activity::Poller)
@@ -190,6 +194,7 @@ describe Cadence::Worker do
             an_instance_of(Cadence::ExecutableLookup),
             config,
             [],
+            [],
             options
           )
       end
@@ -198,6 +203,7 @@ describe Cadence::Worker do
     context 'when middleware is configured' do
       let(:entry_1) { instance_double(Cadence::Middleware::Entry) }
       let(:entry_2) { instance_double(Cadence::Middleware::Entry) }
+      let(:entry_3) { instance_double(Cadence::Middleware::Entry) }
 
       before do
         allow(Cadence::Middleware::Entry)
@@ -210,8 +216,14 @@ describe Cadence::Worker do
           .with(TestWorkerActivityMiddleware, [])
           .and_return(entry_2)
 
+        allow(Cadence::Middleware::Entry)
+          .to receive(:new)
+          .with(TestWorkerWorkflowMiddleware, [])
+          .and_return(entry_3)
+
         subject.add_decision_middleware(TestWorkerDecisionMiddleware)
         subject.add_activity_middleware(TestWorkerActivityMiddleware)
+        subject.add_workflow_middleware(TestWorkerWorkflowMiddleware)
       end
 
       it 'starts pollers with correct middleware' do
@@ -219,7 +231,7 @@ describe Cadence::Worker do
 
         allow(Cadence::Workflow::Poller)
           .to receive(:new)
-          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [entry_1], {})
+          .with('default-domain', 'default-task-list', an_instance_of(Cadence::ExecutableLookup), config, [entry_1], [entry_3], {})
           .and_return(workflow_poller_1)
 
         allow(Cadence::Activity::Poller)

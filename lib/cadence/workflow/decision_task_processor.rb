@@ -9,7 +9,7 @@ module Cadence
     class DecisionTaskProcessor
       MAX_FAILED_ATTEMPTS = 50
 
-      def initialize(task, domain, workflow_lookup, middleware_chain, config)
+      def initialize(task, domain, workflow_lookup, middleware_chain, workflow_middleware_chain, config)
         @task = task
         @domain = domain
         @metadata = Metadata.generate(Metadata::DECISION_TYPE, task, domain)
@@ -17,6 +17,7 @@ module Cadence
         @workflow_name = task.workflowType.name
         @workflow_class = workflow_lookup.find(workflow_name)
         @middleware_chain = middleware_chain
+        @workflow_middleware_chain = workflow_middleware_chain
         @config = config
       end
 
@@ -33,7 +34,7 @@ module Cadence
 
         history = fetch_full_history
         # TODO: For sticky workflows we need to cache the Executor instance
-        executor = Workflow::Executor.new(workflow_class, history, metadata, config)
+        executor = Workflow::Executor.new(workflow_class, history, metadata, config, workflow_middleware_chain)
 
         decisions = middleware_chain.invoke(metadata) do
           executor.run
@@ -53,7 +54,7 @@ module Cadence
       private
 
       attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class,
-        :middleware_chain, :config, :metadata
+        :middleware_chain, :workflow_middleware_chain, :config, :metadata
 
       def connection
         @connection ||= Cadence::Connection.generate(config.for_connection)

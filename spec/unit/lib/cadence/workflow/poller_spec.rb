@@ -13,13 +13,18 @@ describe Cadence::Workflow::Poller do
   let(:config) { Cadence::Configuration.new }
   let(:middleware_chain) { instance_double(Cadence::Middleware::Chain) }
   let(:middleware) { [] }
+  let(:workflow_middleware_chain) { instance_double(Cadence::Middleware::Chain) }
+  let(:empty_middleware_chain) { instance_double(Cadence::Middleware::Chain) }
+  let(:workflow_middleware) { [] }
 
-  subject { described_class.new(domain, task_list, lookup, config, middleware) }
+  subject { described_class.new(domain, task_list, lookup, config, middleware, workflow_middleware) }
 
   before do
     allow(Cadence::Connection).to receive(:generate).and_return(connection)
     allow(Cadence::ThreadPool).to receive(:new).and_return(thread_pool)
-    allow(Cadence::Middleware::Chain).to receive(:new).and_return(middleware_chain)
+    allow(Cadence::Middleware::Chain).to receive(:new).with(workflow_middleware).and_return(workflow_middleware_chain)
+    allow(Cadence::Middleware::Chain).to receive(:new).with(middleware).and_return(middleware_chain)
+    allow(Cadence::Middleware::Chain).to receive(:new).with([]).and_return(empty_middleware_chain)
     allow(connection).to receive(:poll_for_decision_task).and_return(nil)
     allow(Cadence.metrics).to receive(:timing)
   end
@@ -59,7 +64,7 @@ describe Cadence::Workflow::Poller do
     end
 
     context 'with options passed' do
-      subject { described_class.new(domain, task_list, lookup, config, middleware, options) }
+      subject { described_class.new(domain, task_list, lookup, config, middleware, workflow_middleware, options) }
       let(:options) { { polling_ttl: 42, thread_pool_size: 42 } }
 
       before do
@@ -117,7 +122,7 @@ describe Cadence::Workflow::Poller do
 
         expect(Cadence::Workflow::DecisionTaskProcessor)
           .to have_received(:new)
-          .with(task, domain, lookup, middleware_chain, config)
+          .with(task, domain, lookup, empty_middleware_chain, empty_middleware_chain, config)
         expect(task_processor).to have_received(:process)
       end
 
@@ -127,6 +132,7 @@ describe Cadence::Workflow::Poller do
           def call(_); end
         end
 
+        let(:workflow_middleware) { [entry_1] }
         let(:middleware) { [entry_1, entry_2] }
         let(:entry_1) { Cadence::Middleware::Entry.new(TestPollerMiddleware, '1') }
         let(:entry_2) { Cadence::Middleware::Entry.new(TestPollerMiddleware, '2') }
@@ -138,9 +144,10 @@ describe Cadence::Workflow::Poller do
           subject.stop; subject.wait
 
           expect(Cadence::Middleware::Chain).to have_received(:new).with(middleware)
+          expect(Cadence::Middleware::Chain).to have_received(:new).with(workflow_middleware)
           expect(Cadence::Workflow::DecisionTaskProcessor)
             .to have_received(:new)
-            .with(task, domain, lookup, middleware_chain, config)
+            .with(task, domain, lookup, middleware_chain, workflow_middleware_chain, config)
         end
       end
     end

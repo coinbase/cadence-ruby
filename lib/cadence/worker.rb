@@ -14,6 +14,7 @@ module Cadence
       @pollers = []
       @decision_middleware = []
       @activity_middleware = []
+      @workflow_middleware = []
       @shutting_down = false
     end
 
@@ -37,6 +38,10 @@ module Cadence
 
     def add_activity_middleware(middleware_class, *args)
       @activity_middleware << Middleware::Entry.new(middleware_class, args)
+    end
+
+    def add_workflow_middleware(middleware_class, *args)
+      @workflow_middleware << Middleware::Entry.new(middleware_class, args)
     end
 
     def start
@@ -68,14 +73,14 @@ module Cadence
     private
 
     attr_reader :config, :options, :activities, :workflows, :pollers,
-                :decision_middleware, :activity_middleware
+                :decision_middleware, :activity_middleware, :workflow_middleware
 
     def shutting_down?
       @shutting_down
     end
 
     def workflow_poller_for(domain, task_list, lookup)
-      Workflow::Poller.new(domain, task_list, lookup.freeze, config, decision_middleware, options)
+      Workflow::Poller.new(domain, task_list, lookup.freeze, config, decision_middleware, workflow_middleware, options)
     end
 
     def activity_poller_for(domain, task_list, lookup)
