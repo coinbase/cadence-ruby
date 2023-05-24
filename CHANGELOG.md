@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.18
+- Expose parent workflow info (ID and RunID) in Cadence::Metadata::Workflow object
+
 ## 0.1.17
 - Add workflow decision task deserialization logic that is compatible with official go implementation
 

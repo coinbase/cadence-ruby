@@ -26,6 +26,26 @@ Fabricator(:workflow_execution_started_event_thrift, from: :history_event_thrift
   end
 end
 
+Fabricator(:workflow_execution_started_event_thrift_with_parent, from: :history_event_thrift) do
+  eventType { CadenceThrift::EventType::WorkflowExecutionStarted }
+  workflowExecutionStartedEventAttributes do
+    CadenceThrift::WorkflowExecutionStartedEventAttributes.new(
+      workflowType: Fabricate(:workflow_type_thrift),
+      parentWorkflowExecution: Fabricate(:workflow_execution_thrift),
+      taskList: Fabricate(:task_list_thrift),
+      input: nil,
+      executionStartToCloseTimeoutSeconds: 60,
+      taskStartToCloseTimeoutSeconds: 15,
+      originalExecutionRunId: SecureRandom.uuid,
+      identity: 'test-worker@test-host',
+      firstExecutionRunId: SecureRandom.uuid,
+      retryPolicy: nil,
+      attempt: 0,
+      header: Fabricate(:header_thrift)
+    )
+  end
+end
+
 Fabricator(:workflow_execution_completed_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::WorkflowExecutionCompleted }
   workflowExecutionCompletedEventAttributes do |attrs|

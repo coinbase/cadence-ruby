@@ -56,6 +56,8 @@ module Cadence
           id: metadata.workflow_id,
           name: event_attributes.workflowType.name,
           run_id: event_attributes.originalExecutionRunId,
+          parent_workflow_id: event_attributes.parentWorkflowExecution&.workflowId,
+          parent_workflow_run_id: event_attributes.parentWorkflowExecution&.runId,
           attempt: event_attributes.attempt,
           headers: event_attributes.header&.fields || {},
           timeouts: {
