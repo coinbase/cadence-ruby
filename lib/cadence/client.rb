@@ -65,9 +65,20 @@ module Cadence
       nil
     end
 
+    # DEPRECATED: Please use signal_workflow_execution instead
     def signal_workflow(workflow, signal, workflow_id, run_id, input = nil)
       connection.signal_workflow_execution(
         domain: workflow.domain, # TODO: allow passing domain instead
+        workflow_id: workflow_id,
+        run_id: run_id,
+        signal: signal,
+        input: input
+      )
+    end
+
+    def signal_workflow_execution(domain:, signal:, workflow_id:, run_id:, input: nil)
+      connection.signal_workflow_execution(
+        domain: domain,
         workflow_id: workflow_id,
         run_id: run_id,
         signal: signal,

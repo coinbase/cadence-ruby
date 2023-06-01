@@ -875,4 +875,28 @@ describe Cadence::Client do
       end
     end
   end
+
+  describe '#signal_workflow_execution' do
+    before do
+      allow(connection).to receive(:signal_workflow_execution).and_return(nil)
+
+      it 'calls connection signal_workflow_execution' do
+        subject.signal_workflow_execution(
+          domain: 'default-test-domain',
+          signal: 'signal-name',
+          workflow_id: 'workflow-id',
+          run_id: 'run-id',
+          input: 'input'
+        )
+
+        expect(connection).to have_received(:signal_workflow_execution).with(
+          domain: 'default-test-domain',
+          workflow_id: 'workflow-id',
+          run_id: 'run-id',
+          signal: 'signal-name',
+          input: 'input'
+        )
+      end
+    end
+  end
 end

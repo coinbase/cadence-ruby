@@ -27,6 +27,8 @@ module Cadence
 
   def self.signal_workflow(*args, &block); end
 
+  def self.signal_workflow_execution(*args, &block); end
+
   def self.start_workflow(*args, &block); end
 
   def self.terminate_workflow(*args, &block); end
@@ -456,6 +458,8 @@ class Cadence::Client
   def schedule_workflow(workflow, cron_schedule, *input, **args); end
 
   def signal_workflow(workflow, signal, workflow_id, run_id, input = nil); end
+
+  def signal_workflow_execution(domain:, signal:, workflow_id:, run_id:, input: nil); end
 
   def start_workflow(workflow, *input, **args); end
 

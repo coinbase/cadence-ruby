@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.19
+- Add a new `#signal_workflow_execution` method to accept domain rather than workflow.
+
 ## 0.1.18
 - Expose parent workflow info (ID and RunID) in Cadence::Metadata::Workflow object
 
