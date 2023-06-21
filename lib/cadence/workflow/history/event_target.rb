@@ -39,14 +39,14 @@ module Cadence
         }.freeze
 
         DECISION_TARGET_TYPES = {
-          'Cadence::Workflow::Decision::ScheduleActivity'            => History::EventTarget::ACTIVITY_TYPE,
-          'Cadence::Workflow::Decision::RequestActivityCancellation' => History::EventTarget::CANCEL_ACTIVITY_REQUEST_TYPE,
-          'Cadence::Workflow::Decision::RecordMarker'                => History::EventTarget::MARKER_TYPE,
-          'Cadence::Workflow::Decision::StartTimer'                  => History::EventTarget::TIMER_TYPE,
-          'Cadence::Workflow::Decision::CancelTimer'                 => History::EventTarget::CANCEL_TIMER_REQUEST_TYPE,
-          'Cadence::Workflow::Decision::CompleteWorkflow'            => History::EventTarget::WORKFLOW_TYPE,
-          'Cadence::Workflow::Decision::FailWorkflow'                => History::EventTarget::WORKFLOW_TYPE,
-          'Cadence::Workflow::Decision::StartChildWorkflow'          => History::EventTarget::CHILD_WORKFLOW_TYPE,
+          'Cadence::Workflow::Decision::ScheduleActivity'            => ACTIVITY_TYPE,
+          'Cadence::Workflow::Decision::RequestActivityCancellation' => CANCEL_ACTIVITY_REQUEST_TYPE,
+          'Cadence::Workflow::Decision::RecordMarker'                => MARKER_TYPE,
+          'Cadence::Workflow::Decision::StartTimer'                  => TIMER_TYPE,
+          'Cadence::Workflow::Decision::CancelTimer'                 => CANCEL_TIMER_REQUEST_TYPE,
+          'Cadence::Workflow::Decision::CompleteWorkflow'            => WORKFLOW_TYPE,
+          'Cadence::Workflow::Decision::FailWorkflow'                => WORKFLOW_TYPE,
+          'Cadence::Workflow::Decision::StartChildWorkflow'          => CHILD_WORKFLOW_TYPE,
         }.freeze
 
         DECISION_ATTRIBUTE_LISTS = {
