@@ -57,7 +57,7 @@ module Cadence
 
         decisions << [decision_id, decision]
 
-        return [event_target_from(decision_id, decision), cancelation_id]
+        [History::EventTarget.from_decision(decision_id, decision), cancelation_id]
       end
 
       def release?(release_name)
@@ -258,28 +258,6 @@ module Cadence
         end
       end
 
-      def event_target_from(decision_id, decision)
-        target_type =
-          case decision
-          when Decision::ScheduleActivity
-            History::EventTarget::ACTIVITY_TYPE
-          when Decision::RequestActivityCancellation
-            History::EventTarget::CANCEL_ACTIVITY_REQUEST_TYPE
-          when Decision::RecordMarker
-            History::EventTarget::MARKER_TYPE
-          when Decision::StartTimer
-            History::EventTarget::TIMER_TYPE
-          when Decision::CancelTimer
-            History::EventTarget::CANCEL_TIMER_REQUEST_TYPE
-          when Decision::CompleteWorkflow, Decision::FailWorkflow
-            History::EventTarget::WORKFLOW_TYPE
-          when Decision::StartChildWorkflow
-            History::EventTarget::CHILD_WORKFLOW_TYPE
-          end
-
-        History::EventTarget.new(decision_id, target_type)
-      end
-
       def dispatch(target, name, *attributes)
         dispatcher.dispatch(target, name, attributes)
       end
@@ -292,7 +270,7 @@ module Cadence
           raise NonDeterministicWorkflowError, "A decision #{target} was not scheduled upon replay"
         end
 
-        existing_target = event_target_from(existing_decision_id, existing_decision)
+        existing_target = History::EventTarget.from_decision(existing_decision_id, existing_decision)
         if target != existing_target
           raise NonDeterministicWorkflowError, "Unexpected decision #{existing_target} (expected #{target})"
         end

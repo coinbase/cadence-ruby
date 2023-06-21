@@ -41,4 +41,30 @@ describe Cadence::Workflow::History::Event do
       it { is_expected.to eq(raw_event.eventId) }
     end
   end
+
+  describe '#target_attributes' do
+    subject { described_class.new(raw_event).target_attributes }
+
+    context 'when event is ActivityTaskScheduled' do
+      let(:input) { ['foo', 'bar', { 'foo' => 'bar' }] }
+      let(:raw_event) do
+        Fabricate(:activity_task_scheduled_event_thrift, eventId: 42, input: input)
+      end
+
+      it {
+        is_expected.to eq({ activity_id: 42, activity_type: 'TestActivity', input: input })
+      }
+    end
+
+    context 'when event is DecisionTaskScheduled' do
+      let(:input) { ['foo', 'bar', { 'foo' => 'bar' }] }
+      let(:raw_event) do
+        Fabricate(:decision_task_scheduled_event_thrift, eventId: 42)
+      end
+
+      it {
+        is_expected.to eq({})
+      }
+    end
+  end
 end
