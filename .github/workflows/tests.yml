@@ -59,6 +59,7 @@ jobs:
           sleep 10
 
       - name: Register Domain
+        continue-on-error: true
         run: |
           cd examples && bin/register_domain ruby-samples
 
