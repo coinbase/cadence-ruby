@@ -33,7 +33,7 @@ jobs:
       fail-fast: false
 
     env:
-      CADENCE_HOST: proxy
+      CADENCE_HOST: localhost
       CADENCE_PORT: 6666
 
     steps:
