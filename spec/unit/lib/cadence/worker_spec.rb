@@ -260,7 +260,10 @@ describe Cadence::Worker do
 
     describe 'signal handling' do
       before do
-        @thread = Thread.new { subject.start }
+        @thread = Thread.new do
+          @worker_pid = Process.pid
+          subject.start
+        end
         sleep THREAD_SYNC_DELAY # give worker time to start
       end
 
@@ -277,14 +280,14 @@ describe Cadence::Worker do
       end
 
       it 'traps TERM signal' do
-        Process.kill('TERM', 0)
+        Process.kill('TERM', @worker_pid)
         sleep THREAD_SYNC_DELAY
 
         expect(@thread).not_to be_alive
       end
 
       it 'traps INT signal' do
-        Process.kill('INT', 0)
+        Process.kill('TERM', @worker_pid)
         sleep THREAD_SYNC_DELAY
 
         expect(@thread).not_to be_alive
