@@ -35,7 +35,10 @@ describe Cadence::Crew do
       let(:thread_sync_delay) { 2 }
 
       before do
-        @thread = Thread.new { real_crew.dispatch }
+        @thread = Thread.new do
+          @worker_pid = Process.pid
+          real_crew.dispatch
+        end
         sleep 0.1 # give crew time to start
       end
 
@@ -52,14 +55,14 @@ describe Cadence::Crew do
       end
 
       it 'traps TERM signal' do
-        Process.kill('TERM', 0)
+        Process.kill('TERM', @worker_pid)
         sleep thread_sync_delay
 
         expect(@thread).not_to be_alive
       end
 
       it 'traps INT signal' do
-        Process.kill('INT', 0)
+        Process.kill('INT', @worker_pid)
         sleep thread_sync_delay
 
         expect(@thread).not_to be_alive
