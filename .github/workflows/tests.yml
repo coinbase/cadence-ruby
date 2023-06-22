@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
 
-    environment:
+    env:
       CADENCE_HOST: proxy
       CADENCE_PORT: 6666
 
