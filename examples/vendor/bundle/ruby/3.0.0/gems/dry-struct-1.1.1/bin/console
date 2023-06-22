@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'dry/struct'
+
+require 'irb'
+
+module Types
+  include Dry.Types()
+end
+
+binding.irb

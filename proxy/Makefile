@@ -14,11 +14,12 @@ bin/proxy:
 
 # Generate Thrift go libraries
 .PHONY: thrift
-thrift: thriftrw thriftrw-plugin-yarpc clean_thrift
-	thriftrw --plugin yarpc --out ${OUT} --pkg-prefix ${PREFIX} ${THRIFT_PATH}
+thrift: thriftrw thriftrw-plugin-yarpc
+# 	thriftrw --plugin yarpc --out ${OUT} --pkg-prefix ${PREFIX} ${THRIFT_PATH}
+	thriftrw -h
 
-clean_thrift:
-	rm -rf gen
+# clean_thrift:
+# 	rm -rf gen
 
 .PHONY: thriftrw
 thriftrw:

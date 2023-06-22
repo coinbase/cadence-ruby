@@ -1,0 +1,23 @@
+current directory: /Users/derauk/src/public/cadence-ruby/examples/vendor/bundle/ruby/3.0.0/gems/thrift-0.18.1/ext
+/Users/derauk/.rbenv/versions/3.0.3/bin/ruby -I /Users/derauk/.rbenv/versions/3.0.3/lib/ruby/3.0.0 -r ./siteconf20230622-37695-g9vyow.rb extconf.rb
+checking for strlcpy() in string.h... yes
+creating Makefile
+
+current directory: /Users/derauk/src/public/cadence-ruby/examples/vendor/bundle/ruby/3.0.0/gems/thrift-0.18.1/ext
+make DESTDIR\= clean
+
+current directory: /Users/derauk/src/public/cadence-ruby/examples/vendor/bundle/ruby/3.0.0/gems/thrift-0.18.1/ext
+make DESTDIR\=
+compiling binary_protocol_accelerated.c
+compiling bytes.c
+compiling compact_protocol.c
+compiling memory_buffer.c
+compiling protocol.c
+compiling strlcpy.c
+compiling struct.c
+compiling thrift_native.c
+linking shared-object thrift_native.bundle
+
+current directory: /Users/derauk/src/public/cadence-ruby/examples/vendor/bundle/ruby/3.0.0/gems/thrift-0.18.1/ext
+make DESTDIR\= install
+/opt/homebrew/bin/ginstall -c -m 0755 thrift_native.bundle ./.gem.20230622-37695-9mjh6f
