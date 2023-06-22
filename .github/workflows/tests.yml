@@ -32,6 +32,10 @@ jobs:
     strategy:
       fail-fast: false
 
+    environment:
+      CADENCE_HOST: proxy
+      CADENCE_PORT: 6666
+
     steps:
       - uses: actions/checkout@v3
 
