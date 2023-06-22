@@ -37,7 +37,7 @@ describe Cadence::Crew do
       before do
         @thread = Thread.new do
           @worker_pid = Process.pid
-          subject.start
+          real_crew.dispatch
         end
         sleep 0.1 # give crew time to start
       end
