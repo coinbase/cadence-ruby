@@ -1,4 +1,0 @@
---title 'dry-struct'
---markup markdown
---readme README.md
-lib/**/*.rb
