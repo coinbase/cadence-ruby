@@ -102,29 +102,5 @@ describe Cadence::Workflow::History::EventTarget do
         expect(subject).to eq(false)
       end
     end
-
-    context 'when attributes are different' do
-      let(:attributes) { { bar: 'foo' } }
-
-      it 'returns false' do
-        expect(subject).to eq(false)
-      end
-    end
-
-    context 'when attributes are subset' do
-      let(:attributes) { {} }
-
-      it 'returns false' do
-        expect(subject).to eq(false)
-      end
-    end
-
-    context 'when attributes are superset' do
-      let(:attributes) { { foo: 'bar', bar: 'foo' } }
-
-      it 'returns false' do
-        expect(subject).to eq(false)
-      end
-    end
   end
 end

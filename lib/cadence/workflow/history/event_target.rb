@@ -91,7 +91,7 @@ module Cadence
         end
 
         def ==(other)
-          id == other.id && type == other.type && attributes == other.attributes
+          id == other.id && type == other.type
         end
 
         def eql?(other)
@@ -99,7 +99,7 @@ module Cadence
         end
 
         def hash
-          [id, type, attributes].hash
+          [id, type].hash
         end
 
         def to_s

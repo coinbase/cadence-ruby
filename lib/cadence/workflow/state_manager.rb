@@ -271,7 +271,7 @@ module Cadence
         end
 
         existing_target = History::EventTarget.from_decision(existing_decision_id, existing_decision)
-        if target != existing_target
+        if target != existing_target || target.attributes != existing_target.attributes
           raise NonDeterministicWorkflowError, "Unexpected decision #{existing_target} (expected #{target})"
         end
       end
