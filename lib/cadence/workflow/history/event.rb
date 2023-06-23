@@ -65,7 +65,7 @@ module Cadence
           case type
           when 'ActivityTaskScheduled'
             {
-              activity_id: attributes.activityId,
+              activity_id: attributes.activityId.to_i, # activityId is a string from thrift
               activity_type: attributes.activityType.name,
               input: deserialize(attributes.input)
             }

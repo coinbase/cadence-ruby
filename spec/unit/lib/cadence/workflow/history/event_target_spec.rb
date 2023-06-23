@@ -31,7 +31,7 @@ describe Cadence::Workflow::History::EventTarget do
       let(:input) { ['foo', 'bar', { 'foo' => 'bar' }] }
       let(:raw_event) { Fabricate(:activity_task_scheduled_event_thrift, eventId: 42, input: input) }
 
-      it 'sets id and type' do
+      it 'sets id, type and attributes' do
         expect(subject.id).to eq(42)
         expect(subject.type).to eq(described_class::ACTIVITY_TYPE)
         expect(subject.attributes).to eq({ activity_id: 42, activity_type: 'TestActivity', input: input })

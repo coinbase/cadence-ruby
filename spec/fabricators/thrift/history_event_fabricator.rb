@@ -95,7 +95,7 @@ Fabricator(:activity_task_scheduled_event_thrift, from: :history_event_thrift) d
   eventType { CadenceThrift::EventType::ActivityTaskScheduled }
   activityTaskScheduledEventAttributes do |attrs|
     CadenceThrift::ActivityTaskScheduledEventAttributes.new(
-      activityId: attrs[:eventId],
+      activityId: attrs[:eventId].to_s,
       activityType: CadenceThrift::ActivityType.new(name: 'TestActivity'),
       input: Cadence::JSON.serialize(attrs[:input]),
       decisionTaskCompletedEventId: attrs[:eventId] - 1,
@@ -145,7 +145,7 @@ Fabricator(:timer_started_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::TimerStarted }
   timerStartedEventAttributes do |attrs|
     CadenceThrift::TimerStartedEventAttributes.new(
-      timerId: attrs[:eventId],
+      timerId: attrs[:eventId].to_s,
       startToFireTimeoutSeconds: 10,
       decisionTaskCompletedEventId: attrs[:eventId] - 1
     )
@@ -156,7 +156,7 @@ Fabricator(:timer_fired_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::TimerFired }
   timerFiredEventAttributes do |attrs|
     CadenceThrift::TimerFiredEventAttributes.new(
-      timerId: attrs[:eventId],
+      timerId: attrs[:eventId].to_s,
       startedEventId: attrs[:eventId] - 4
     )
   end
@@ -166,7 +166,7 @@ Fabricator(:timer_canceled_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::TimerCanceled }
   timerCanceledEventAttributes do |attrs|
     CadenceThrift::TimerCanceledEventAttributes.new(
-      timerId: attrs[:eventId],
+      timerId: attrs[:eventId].to_s,
       startedEventId: attrs[:eventId] - 4,
       decisionTaskCompletedEventId: attrs[:eventId] - 1,
       identity: 'test-worker@test-host'
