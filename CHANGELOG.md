@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.20
+- Check activity id, type and input to detect non-deterministic workflow when applying history
+
 ## 0.1.19
 - Add a new `#signal_workflow_execution` method to accept domain rather than workflow.
 
