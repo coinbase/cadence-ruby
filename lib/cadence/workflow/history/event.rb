@@ -1,9 +1,12 @@
 require 'cadence/utils'
+require 'cadence/concerns/input_deserializer'
 
 module Cadence
   class Workflow
     class History
       class Event
+        include Cadence::Concerns::InputDeserializer
+
         EVENT_TYPES = %w[
           ActivityTaskStarted
           ActivityTaskCompleted
@@ -55,6 +58,19 @@ module Cadence
             attributes.initiatedEventId
           else
             id
+          end
+        end
+
+        def target_attributes
+          case type
+          when 'ActivityTaskScheduled'
+            {
+              activity_id: attributes.activityId.to_i, # activityId is a string from thrift
+              activity_type: attributes.activityType.name,
+              input: deserialize(attributes.input)
+            }
+          else
+            {}
           end
         end
 

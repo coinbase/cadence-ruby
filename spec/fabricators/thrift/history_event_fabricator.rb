@@ -1,19 +1,21 @@
 require 'gen/thrift/cadence_types'
 require 'cadence/utils'
+require 'cadence/json'
 require 'securerandom'
 
 Fabricator(:history_event_thrift, from: CadenceThrift::HistoryEvent) do
   eventId { 1 }
   timestamp { Cadence::Utils.time_to_nanos(Time.now) }
+  transient input: nil
 end
 
 Fabricator(:workflow_execution_started_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::WorkflowExecutionStarted }
-  workflowExecutionStartedEventAttributes do
+  workflowExecutionStartedEventAttributes do |attrs|
     CadenceThrift::WorkflowExecutionStartedEventAttributes.new(
       workflowType: Fabricate(:workflow_type_thrift),
       taskList: Fabricate(:task_list_thrift),
-      input: nil,
+      input: Cadence::JSON.serialize(attrs[:input]),
       executionStartToCloseTimeoutSeconds: 60,
       taskStartToCloseTimeoutSeconds: 15,
       originalExecutionRunId: SecureRandom.uuid,
@@ -28,12 +30,12 @@ end
 
 Fabricator(:workflow_execution_started_event_thrift_with_parent, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::WorkflowExecutionStarted }
-  workflowExecutionStartedEventAttributes do
+  workflowExecutionStartedEventAttributes do |attrs|
     CadenceThrift::WorkflowExecutionStartedEventAttributes.new(
       workflowType: Fabricate(:workflow_type_thrift),
       parentWorkflowExecution: Fabricate(:workflow_execution_thrift),
       taskList: Fabricate(:task_list_thrift),
-      input: nil,
+      input: Cadence::JSON.serialize(attrs[:input]),
       executionStartToCloseTimeoutSeconds: 60,
       taskStartToCloseTimeoutSeconds: 15,
       originalExecutionRunId: SecureRandom.uuid,
@@ -58,7 +60,7 @@ end
 
 Fabricator(:decision_task_scheduled_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::DecisionTaskScheduled }
-  decisionTaskScheduledEventAttributes do |attrs|
+  decisionTaskScheduledEventAttributes do |_attrs|
     CadenceThrift::DecisionTaskScheduledEventAttributes.new(
       taskList: Fabricate(:task_list_thrift),
       startToCloseTimeoutSeconds: 15,
@@ -93,8 +95,9 @@ Fabricator(:activity_task_scheduled_event_thrift, from: :history_event_thrift) d
   eventType { CadenceThrift::EventType::ActivityTaskScheduled }
   activityTaskScheduledEventAttributes do |attrs|
     CadenceThrift::ActivityTaskScheduledEventAttributes.new(
-      activityId: attrs[:eventId],
+      activityId: attrs[:eventId].to_s,
       activityType: CadenceThrift::ActivityType.new(name: 'TestActivity'),
+      input: Cadence::JSON.serialize(attrs[:input]),
       decisionTaskCompletedEventId: attrs[:eventId] - 1,
       domain: 'test-domain',
       taskList: Fabricate(:task_list_thrift)
@@ -142,7 +145,7 @@ Fabricator(:timer_started_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::TimerStarted }
   timerStartedEventAttributes do |attrs|
     CadenceThrift::TimerStartedEventAttributes.new(
-      timerId: attrs[:eventId],
+      timerId: attrs[:eventId].to_s,
       startToFireTimeoutSeconds: 10,
       decisionTaskCompletedEventId: attrs[:eventId] - 1
     )
@@ -153,7 +156,7 @@ Fabricator(:timer_fired_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::TimerFired }
   timerFiredEventAttributes do |attrs|
     CadenceThrift::TimerFiredEventAttributes.new(
-      timerId: attrs[:eventId],
+      timerId: attrs[:eventId].to_s,
       startedEventId: attrs[:eventId] - 4
     )
   end
@@ -163,7 +166,7 @@ Fabricator(:timer_canceled_event_thrift, from: :history_event_thrift) do
   eventType { CadenceThrift::EventType::TimerCanceled }
   timerCanceledEventAttributes do |attrs|
     CadenceThrift::TimerCanceledEventAttributes.new(
-      timerId: attrs[:eventId],
+      timerId: attrs[:eventId].to_s,
       startedEventId: attrs[:eventId] - 4,
       decisionTaskCompletedEventId: attrs[:eventId] - 1,
       identity: 'test-worker@test-host'
