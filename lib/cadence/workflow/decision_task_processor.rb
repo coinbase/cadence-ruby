@@ -15,6 +15,7 @@ module Cadence
         @metadata = Metadata.generate(Metadata::DECISION_TYPE, task, domain)
         @task_token = task.taskToken
         @workflow_name = task.workflowType.name
+        @workflow_id = task.workflowExecution.workflowId
         @workflow_class = workflow_lookup.find(workflow_name)
         @middleware_chain = middleware_chain
         @workflow_middleware_chain = workflow_middleware_chain
@@ -24,7 +25,7 @@ module Cadence
       def process
         start_time = Time.now
 
-        Cadence.logger.info("Processing a decision task for #{workflow_name}")
+        Cadence.logger.info("Processing a decision task for #{workflow_log_name}")
         Cadence.metrics.timing('decision_task.queue_time', queue_time_ms, workflow: workflow_name)
 
         unless workflow_class
@@ -53,7 +54,7 @@ module Cadence
 
       private
 
-      attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class,
+      attr_reader :task, :domain, :task_token, :workflow_name, :workflow_class, :workflow_id,
         :middleware_chain, :workflow_middleware_chain, :config, :metadata
 
       def connection
@@ -88,19 +89,19 @@ module Cadence
       end
 
       def complete_task(decisions)
-        Cadence.logger.info("Decision task for #{workflow_name} completed")
+        Cadence.logger.info("Decision task for #{workflow_log_name} completed")
 
         connection.respond_decision_task_completed(
           task_token: task_token,
           decisions: serialize_decisions(decisions)
         )
       rescue StandardError => error
-        Cadence.logger.error("Unable to complete Decision task #{workflow_name}: #{error.inspect}")
+        Cadence.logger.error("Unable to complete Decision task for #{workflow_log_name}: #{error.inspect}")
         Cadence::ErrorHandler.handle(error, metadata: metadata)
       end
 
       def fail_task(message)
-        Cadence.logger.error("Decision task for #{workflow_name} failed with: #{message}")
+        Cadence.logger.error("Decision task for #{workflow_log_name} failed with: #{message}")
 
         # Stop from getting into infinite loop if the error persists
         return if task.attempt >= MAX_FAILED_ATTEMPTS
@@ -111,8 +112,12 @@ module Cadence
           details: message
         )
       rescue StandardError => error
-        Cadence.logger.error("Unable to fail Decision task #{workflow_name}: #{error.inspect}")
+        Cadence.logger.error("Unable to fail Decision task for #{workflow_log_name}: #{error.inspect}")
         Cadence::ErrorHandler.handle(error, metadata: metadata)
+      end
+
+      def workflow_log_name
+        "#{workflow_name} (#{workflow_id})"
       end
     end
   end

@@ -152,7 +152,7 @@ describe Cadence::Workflow::DecisionTaskProcessor do
 
         expect(Cadence.logger)
           .to have_received(:error)
-          .with("Unable to complete Decision task TestWorkflow: #<StandardError: Host unreachable>")
+          .with("Unable to complete Decision task for TestWorkflow (#{task.workflowExecution.workflowId}): #<StandardError: Host unreachable>")
       end
 
       it 'calls error handlers' do
