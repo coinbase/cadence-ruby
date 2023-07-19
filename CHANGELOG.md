@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.21
+- Add workflow id and activity id to workflow and activity logs
+
 ## 0.1.20
 - Check activity id, type and input to detect non-deterministic workflow when applying history
 
