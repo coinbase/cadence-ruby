@@ -1,7 +1,7 @@
 require 'cadence/metadata/workflow'
 
 describe Cadence::Metadata::Workflow do
-  subject { described_class.new(args.to_h) }
+  subject { described_class.new(**args.to_h) }
   let(:args) { Fabricate(:workflow_metadata) }
 
   describe '#initialize' do

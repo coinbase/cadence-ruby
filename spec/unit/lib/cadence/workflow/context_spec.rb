@@ -19,7 +19,7 @@ describe Cadence::Workflow::Context do
         headers: { 'TestHeader' => 'Value' }
       }
     end
-    let(:metadata) { Cadence::Metadata::Workflow.new(metadata_hash) }
+    let(:metadata) { Cadence::Metadata::Workflow.new(**metadata_hash) }
     let(:config) { Cadence::Configuration.new }
 
     describe '#headers' do

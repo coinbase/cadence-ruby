@@ -1,7 +1,7 @@
 require 'cadence/metadata/decision'
 
 describe Cadence::Metadata::Decision do
-  subject { described_class.new(args.to_h) }
+  subject { described_class.new(**args.to_h) }
   let(:args) { Fabricate(:decision_metadata) }
 
   describe '#initialize' do

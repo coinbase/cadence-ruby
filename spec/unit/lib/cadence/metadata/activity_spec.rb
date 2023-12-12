@@ -1,7 +1,7 @@
 require 'cadence/metadata/activity'
 
 describe Cadence::Metadata::Activity do
-  subject { described_class.new(args.to_h) }
+  subject { described_class.new(**args.to_h) }
   let(:args) { Fabricate(:activity_metadata) }
 
   describe '#initialize' do
