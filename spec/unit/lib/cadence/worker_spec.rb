@@ -174,7 +174,7 @@ describe Cadence::Worker do
     end
 
     context 'with options' do
-      subject { described_class.new(config, options) }
+      subject { described_class.new(config, **options) }
       let(:options) { { polling_ttl: 42, thread_pool_size: 42 } }
 
       before do

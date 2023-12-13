@@ -79,7 +79,7 @@ describe Cadence::Crew do
       end
 
       it 'skips the after_fork block if not set' do
-        crew.should_receive(:fork) do |&block|
+        expect(crew).to receive(:fork) do |&block|
           expect(worker).to receive(:start)
           expect(crew.send(:after_fork_block)).to be_nil
           block.call
@@ -96,7 +96,7 @@ describe Cadence::Crew do
 
         crew.after_fork &after_fork_block
 
-        crew.should_receive(:fork) do |&block|
+        expect(crew).to receive(:fork) do |&block|
           block.call
           expect(executed).to eq(true)
           expect(worker).to have_received(:start)

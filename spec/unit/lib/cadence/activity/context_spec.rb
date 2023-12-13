@@ -5,7 +5,7 @@ require 'cadence/connection/thrift'
 describe Cadence::Activity::Context do
   let(:connection) { instance_double('Cadence::Connection::Thrift') }
   let(:metadata_hash) { Fabricate(:activity_metadata).to_h }
-  let(:metadata) { Cadence::Metadata::Activity.new(metadata_hash) }
+  let(:metadata) { Cadence::Metadata::Activity.new(**metadata_hash) }
   let(:task_token) { SecureRandom.uuid }
 
   subject { described_class.new(connection, metadata) }

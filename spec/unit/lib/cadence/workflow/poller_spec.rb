@@ -56,7 +56,7 @@ describe Cadence::Workflow::Poller do
         .to have_received(:timing)
         .with(
           'workflow_poller.time_since_last_poll',
-          an_instance_of(Fixnum),
+          an_instance_of(Integer),
           domain: domain,
           task_list: task_list
         )
