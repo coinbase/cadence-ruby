@@ -492,7 +492,7 @@ module Cadence::Saga
 end
 
 class Cadence::Saga::Saga
-  def add_compensation(activity, *args); end
+  def add_compensation(activity, *args, **kwargs); end
 
   def compensate; end
 

@@ -29,7 +29,7 @@ describe Cadence::Saga::Concern do
     expect(TestSagaConcernActivity3).to have_received(:execute!).ordered
     expect(context)
       .to have_received(:execute_activity!)
-      .with(TestSagaConcernActivity2, 42).ordered
+      .with(TestSagaConcernActivity2, 42, {}).ordered
   end
 
   def expect_saga_not_to_be_compensated
