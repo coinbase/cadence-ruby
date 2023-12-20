@@ -14,13 +14,13 @@ describe Cadence::Saga::Saga do
       subject.add_compensation('SomeActivity', 42, options: { domain: 'test', task_list: 'test' })
 
       expect(compensations)
-        .to eq([['SomeActivity', [42, options: { domain: 'test', task_list: 'test' }]]])
+        .to eq([['SomeActivity', [42], options: { domain: 'test', task_list: 'test' }]])
     end
 
     it 'adds activity by class' do
       subject.add_compensation(TestSagaActivity, 42)
 
-      expect(compensations).to eq([[TestSagaActivity, [42]]])
+      expect(compensations).to eq([[TestSagaActivity, [42], {}]])
     end
   end
 
@@ -46,13 +46,13 @@ describe Cadence::Saga::Saga do
 
         expect(context)
           .to have_received(:execute_activity!)
-          .with('SomeActivity', 42, options: { domain: 'test', task_list: 'test' })
-          .ordered
+                .with('SomeActivity', 42, options: { domain: 'test', task_list: 'test' })
+                .ordered
 
         expect(context)
           .to have_received(:execute_activity!)
-          .with(TestSagaActivity, 42)
-          .ordered
+                .with(TestSagaActivity, 42, {})
+                .ordered
       end
     end
   end

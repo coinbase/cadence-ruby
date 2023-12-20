@@ -6,13 +6,13 @@ module Cadence
         @compensations = []
       end
 
-      def add_compensation(activity, *args)
-        compensations << [activity, args]
+      def add_compensation(activity, *args, **kwargs)
+        compensations << [activity, args, kwargs]
       end
 
       def compensate
-        compensations.reverse_each do |(activity, args)|
-          context.execute_activity!(activity, *args)
+        compensations.reverse_each do |(activity, args, kwargs)|
+          context.execute_activity!(activity, *args, **kwargs)
         end
       end
 
