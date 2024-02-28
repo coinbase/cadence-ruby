@@ -18,4 +18,11 @@ module Cadence
   # A superclass for activity exceptions raised explicitly
   # with the itent to propagate to a workflow
   class ActivityException < ClientError; end
+
+  # Once the workflow succeeds, fails, or continues as new, you can't issue any other commands such as
+  # scheduling an activity.  This error is thrown if you try, before we report completion back to the server.
+  # This could happen due to activity futures that aren't awaited before the workflow closes,
+  # calling workflow.continue_as_new, workflow.complete, or workflow.fail in the middle of your workflow code,
+  # or an internal framework bug.
+  class WorkflowAlreadyCompletingError < InternalError; end
 end
