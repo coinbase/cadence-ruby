@@ -16,6 +16,30 @@ describe Cadence::Workflow::StateManager do
 
       expect(subject.decisions.length).to eq(1)
     end
+
+    # These are all "terminal" decisions
+    [
+      Cadence::Workflow::Decision::FailWorkflow.new(
+        reason: 'dummy',
+        ),
+      Cadence::Workflow::Decision::CompleteWorkflow.new(
+        result: 5,
+        ),
+    ].each do |terminal_command|
+      it "fails to validate if #{terminal_command.class} is not the last command scheduled" do
+        state_manager = described_class.new(Cadence::Workflow::Dispatcher.new)
+
+        next_command = Cadence::Workflow::Decision::RecordMarker.new(
+          name: Cadence::Workflow::StateManager::RELEASE_MARKER,
+          details: 'dummy',
+          )
+
+        state_manager.schedule(terminal_command)
+        expect do
+          state_manager.schedule(next_command)
+        end.to raise_error(Cadence::WorkflowAlreadyCompletingError)
+      end
+    end
   end
 
   describe '.apply' do

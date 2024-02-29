@@ -55,6 +55,7 @@ module Cadence
         state_machine = decision_tracker[decision_id]
         state_machine.requested if state_machine.state == DecisionStateMachine::NEW_STATE
 
+        validate_append_decision(decision)
         decisions << [decision_id, decision]
 
         [History::EventTarget.from_decision(decision_id, decision), cancelation_id]
@@ -91,6 +92,25 @@ module Cadence
 
       def next_event_id
         @last_event_id += 1
+      end
+
+      def validate_append_decision(decision)
+        return if decisions.last.nil?
+        _, previous_command = decisions.last
+        case previous_command
+        when Decision::CompleteWorkflow, Decision::FailWorkflow
+          context_string = case previous_command
+                           when Decision::CompleteWorkflow
+                             "The workflow completed"
+                           when Decision::FailWorkflow
+                             "The workflow failed"
+                           end
+          raise Cadence::WorkflowAlreadyCompletingError.new(
+            "You cannot do anything in a Workflow after it completes. #{context_string}, "\
+            "but then it sent a new decision: #{decision.class}.  This can happen, for example, if you've "\
+            "not waited for all of your Activity futures before finishing the Workflow."
+          )
+        end
       end
 
       def apply_event(event)
