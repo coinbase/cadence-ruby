@@ -9,7 +9,7 @@ class InvalidCancelWorkflow < Cadence::Workflow
     future = HelloWorldActivity.execute('Alice')
     workflow.sleep(1)
     workflow.cancel
-    # Doing anything after continue_as_new (or any workflow completion) is illegal
+    # Doing anything after cancel (or any workflow completion) is illegal
     future.done do
       HelloWorldActivity.execute('Bob')
     end
