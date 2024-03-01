@@ -182,6 +182,9 @@ end
 class Cadence::ActivityException < Cadence::ClientError
 end
 
+class Cadence::WorkflowAlreadyCompletingError < Cadence::InternalError
+end
+
 class Anonymous_Struct_608 < Struct
   def backoff; end
 
