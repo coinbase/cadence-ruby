@@ -3,6 +3,7 @@ require 'cadence/activity/poller'
 require 'cadence/execution_options'
 require 'cadence/executable_lookup'
 require 'cadence/middleware/entry'
+require 'cadence/concerns/versioned'
 
 module Cadence
   class Worker
@@ -19,7 +20,12 @@ module Cadence
     end
 
     def register_workflow(workflow_class, options = {})
-      execution_options = ExecutionOptions.new(workflow_class, options, config.default_execution_options)
+      execution_options = ExecutionOptions.new(
+        workflow_class,
+        # ensure default version to avoid executing version picker in worker context
+        options.merge(version: Cadence::Concerns::Versioned::DEFAULT_VERSION),
+        config.default_execution_options
+      )
       key = [execution_options.domain, execution_options.task_list]
 
       @workflows[key].add(execution_options.name, workflow_class)

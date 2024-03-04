@@ -1,4 +1,5 @@
 require 'cadence/concerns/executable'
+require 'cadence/concerns/versioned'
 require 'cadence/retry_policy'
 
 module Cadence
@@ -17,6 +18,9 @@ module Cadence
 
       # For Cadence::Workflow and Cadence::Activity use defined values as the next option
       if object.singleton_class.included_modules.include?(Concerns::Executable)
+        # In a versioned workflow merge the specific version options with default workflow options
+        object = Concerns::Versioned::Workflow.new(object, options[:version]) if versioned?(object)
+
         @domain ||= object.domain
         @task_list ||= object.task_list
         @retry_policy = object.retry_policy.merge(@retry_policy) if object.retry_policy
@@ -40,6 +44,12 @@ module Cadence
       end
 
       freeze
+    end
+
+    private
+
+    def versioned?(workflow)
+      workflow.singleton_class.included_modules.include?(Concerns::Versioned::ClassMethods)
     end
   end
 end
