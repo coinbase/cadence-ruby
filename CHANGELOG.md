@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.22
+- Log shutdown progress for activity and workflow pollers
+
 ## 0.1.21
 - Add workflow id and activity id to workflow and activity logs
 
