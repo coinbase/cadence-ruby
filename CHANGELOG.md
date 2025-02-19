@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.28
+- Log shutdown progress for activity and workflow pollers
+- Add WorkflowAlreadyCompletingError to the rbi file
+- Validate that a workflow isn't completed before recording commands
+- Ruby 3 compatibility
+
 ## 0.1.21
 - Add workflow id and activity id to workflow and activity logs
 

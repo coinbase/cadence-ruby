@@ -29,12 +29,14 @@ module Cadence
 
       def stop
         @shutting_down = true
-        Cadence.logger.info('Shutting down a workflow poller')
+        Cadence.logger.info('Shutting down workflow poller')
       end
 
       def wait
         @thread.join
+        Cadence.logger.info('Draining workflow worker job queue')
         thread_pool.shutdown
+        Cadence.logger.info('Workflow poller shutdown gracefully')
       end
 
       private

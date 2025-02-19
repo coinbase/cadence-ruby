@@ -33,7 +33,9 @@ module Cadence
 
       def wait
         thread.join
+        Cadence.logger.info('Draining activity worker job queue')
         thread_pool.shutdown
+        Cadence.logger.info('Activity poller shutdown gracefully')
       end
 
       private
