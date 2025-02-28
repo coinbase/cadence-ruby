@@ -1,5 +1,7 @@
 require 'cadence/execution_options'
 require 'cadence/configuration'
+require 'cadence/workflow'
+require 'cadence/concerns/versioned'
 
 describe Cadence::ExecutionOptions do
   subject { described_class.new(object, options, defaults) }
@@ -191,6 +193,92 @@ describe Cadence::ExecutionOptions do
         expect { subject }.to raise_error(
           Cadence::RetryPolicy::InvalidRetryPolicy,
           'All intervals must be specified in whole seconds'
+        )
+      end
+    end
+  end
+
+  context 'when initialized with a Versioned workflow' do
+    class TestVersionedExecutionOptionsWorkflowV1 < Cadence::Workflow
+      retry_policy interval: 5, backoff: 1, max_attempts: 2
+      timeouts execution: 1
+    end
+
+    class TestVersionedExecutionOptionsWorkflowV2 < Cadence::Workflow
+      domain 'new-domain'
+      task_list 'new-task-list'
+      headers 'HeaderV2' => 'TestV2'
+    end
+
+    class TestVersionedExecutionOptionsWorkflow < Cadence::Workflow
+      include Cadence::Concerns::Versioned
+
+      domain 'domain'
+      task_list 'task-list'
+      retry_policy interval: 1, backoff: 2, max_attempts: 5
+      timeouts start_to_close: 10
+      headers 'HeaderA' => 'TestA', 'HeaderB' => 'TestB'
+
+      version 1, TestVersionedExecutionOptionsWorkflowV1
+      version 2, TestVersionedExecutionOptionsWorkflowV2
+    end
+
+    let(:object) { TestVersionedExecutionOptionsWorkflow }
+    let(:options) { {} }
+
+    context 'when initialized without the version header' do
+      it 'is initialized with a mix of latest version and default version values' do
+        expect(subject.name).to eq(object.name)
+        expect(subject.domain).to eq('domain')
+        expect(subject.task_list).to eq('task-list')
+        expect(subject.retry_policy).to be_an_instance_of(Cadence::RetryPolicy)
+        expect(subject.retry_policy.interval).to eq(1)
+        expect(subject.retry_policy.backoff).to eq(2)
+        expect(subject.retry_policy.max_attempts).to eq(5)
+        expect(subject.timeouts).to eq(start_to_close: 10)
+        expect(subject.headers).to eq(
+          'HeaderV2' => 'TestV2',
+          'Version' => '2'
+        )
+      end
+    end
+
+    context 'when initialized with the version header' do
+      let(:options) { { version: 1 } }
+
+      it 'is initialized with a mix of specified version and default version values' do
+        expect(subject.name).to eq(object.name)
+        expect(subject.domain).to eq('domain')
+        expect(subject.task_list).to eq('task-list')
+        expect(subject.retry_policy).to be_an_instance_of(Cadence::RetryPolicy)
+        expect(subject.retry_policy.interval).to eq(5)
+        expect(subject.retry_policy.backoff).to eq(1)
+        expect(subject.retry_policy.max_attempts).to eq(2)
+        expect(subject.timeouts).to eq(execution: 1)
+        expect(subject.headers).to eq(
+          'HeaderA' => 'TestA',
+          'HeaderB' => 'TestB',
+          'Version' => '1'
+        )
+      end
+    end
+
+    context 'when initialized with the default version' do
+      let(:options) { { version: 0 } }
+
+      it 'is initialized with a default version values' do
+        expect(subject.name).to eq(object.name)
+        expect(subject.domain).to eq('domain')
+        expect(subject.task_list).to eq('task-list')
+        expect(subject.retry_policy).to be_an_instance_of(Cadence::RetryPolicy)
+        expect(subject.retry_policy.interval).to eq(1)
+        expect(subject.retry_policy.backoff).to eq(2)
+        expect(subject.retry_policy.max_attempts).to eq(5)
+        expect(subject.timeouts).to eq(start_to_close: 10)
+        expect(subject.headers).to eq(
+          'HeaderA' => 'TestA',
+          'HeaderB' => 'TestB',
+          'Version' => '0'
         )
       end
     end

@@ -397,10 +397,93 @@ however `ActivityNew3` will get executed, since the release wasn't yet checked a
 every new execution of the workflow — all new activities will get executed, while `ActivityOld` will
 not.
 
-Later on you can clean it up and drop all the checks if you don't have any older workflows running
-or expect them to ever be executed (e.g. reset).
-
 *NOTE: Releases with different names do not depend on each other in any way.*
+
+## Extras
+
+This section describes optional extra modules included in the SDK for convenience and some
+additional functionality.
+
+### Versioned Workflows
+
+Implemnting breaking changes using the previously described `#has_release?` flag can be error prone
+and results in a condition build up in workflows over time.
+
+Another way of implementing breaking changes is by doing a full cut over to the new version every
+time you need to modify a workflow. This can be achieved manually by treating new versions as
+separate workflows. We've simplified this process by making your workflow aware of its versions:
+
+```ruby
+require 'cadence/concerns/versioned'
+
+class MyWorkflowV1 < Cadence::Workflow
+  retry_policy max_attempts: 5
+
+  def execute
+    Activity2.execute!
+  end
+end
+
+class MyWorkflowV2 < Cadence::Workflow
+  timeouts execution: 60
+
+  def execute
+    Activity2.execute!
+    Activity3.execute!
+  end
+end
+
+class MyWorkflow < Cadence::Workflow
+  include Cadence::Concerns::Versioned
+
+  version 1, MyWorkflowV1
+  version 2, MyWorkflowV2
+
+  def execute
+    Activity1.execute!
+  end
+end
+```
+
+This way you don't need to make any changes to the invocation of your workflows — calling
+`Cadence.start_workflow(MyWorkflow)` will resolve the latest version and schedule `MyWorkflowV2`.
+It will still appear as if you're executing `MyWorkflow` from the Cadence UI, metrics, logging, etc.
+This approach allows you to easily extend your existing workflows without changing anything outside
+of your workflow.
+
+When making a workflow versioned the main class (e.g. `MyWorkflow`) becomes the default version.
+Once a workflow was scheduled its version will remain unchanged, so all the previously executed
+workflows will be executed using the default implementation. Newly scheduled workflows will pick the
+latest available version, but you can specify a version like this:
+
+```ruby
+Cadence.start_workflow(MyWorkflow, options: { version: 1 })
+```
+
+Once all the old versions are no longer in use you can remove those files and drop their `version`
+definitions (just make sure not to change the numbers for versions that are in active use).
+
+In case you want to do a gradual rollout you can override the version picker with your own
+implementation:
+
+
+```ruby
+class MyWorkflow < Cadence::Workflow
+  include Cadence::Concerns::Versioned
+
+  version 1, MyWorkflowV1
+  version 2, MyWorkflowV2
+  version_picker do |_latest_version|
+    if my_feature_flag?
+      2
+    else
+      1
+    end
+  end
+
+  ...
+end
+```
 
 ## Testing
 
